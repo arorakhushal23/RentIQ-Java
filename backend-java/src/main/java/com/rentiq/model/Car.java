@@ -2,8 +2,8 @@ package com.rentiq.model;
 
 /**
  * Represents a Car vehicle in the RentIQ system.
- * Extends Vehicle to demonstrate inheritance, constructor chaining using super,
- * method overriding, and runtime polymorphism.
+ * Extends abstract Vehicle class to implement concrete rental cost calculation
+ * and car-specific attributes.
  */
 public class Car extends Vehicle {
     private int seatingCapacity;
@@ -37,6 +37,18 @@ public class Car extends Vehicle {
 
     public void setFuelType(String fuelType) {
         this.fuelType = fuelType;
+    }
+
+    /**
+     * Implementation of abstract method from Vehicle.
+     * Calculates car rental cost: pricePerDay * days.
+     */
+    @Override
+    public double calculateRentalCost(int days) {
+        if (days <= 0) {
+            return 0.0;
+        }
+        return getPricePerDay() * days;
     }
 
     @Override

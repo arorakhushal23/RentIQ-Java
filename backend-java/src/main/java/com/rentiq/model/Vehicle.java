@@ -1,11 +1,12 @@
 package com.rentiq.model;
 
 /**
- * Represents a vehicle in the RentIQ system.
- * Demonstrates Core Java fundamentals: classes, objects, encapsulation,
- * access modifiers, constructors, and the 'this' keyword.
+ * Abstract class representing a generic vehicle in the RentIQ system.
+ * Implements Bookable to provide concrete booking lifecycle management,
+ * while leaving category-specific rental cost calculation to concrete subclasses.
+ * Demonstrates abstraction, concrete methods, abstract methods, and interface implementation.
  */
-public class Vehicle {
+public abstract class Vehicle implements Bookable {
     private String vehicleId;
     private String brand;
     private String model;
@@ -34,6 +35,38 @@ public class Vehicle {
     public Vehicle(String vehicleId, String brand, String model, String category, double pricePerDay, boolean available) {
         this(vehicleId, brand, model, category, "N/A", pricePerDay, available);
     }
+
+    // Bookable interface implementation
+    @Override
+    public boolean bookVehicle() {
+        if (this.available) {
+            this.available = false;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean cancelBooking() {
+        if (!this.available) {
+            this.available = true;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return this.available;
+    }
+
+    /**
+     * Abstract method for calculating rental cost based on rental duration.
+     * Each concrete vehicle subclass implements its category-specific pricing logic.
+     * @param days Number of rental days.
+     * @return Calculated total rental cost.
+     */
+    public abstract double calculateRentalCost(int days);
 
     // Getters and Setters
     public String getVehicleId() {
@@ -84,10 +117,6 @@ public class Vehicle {
         this.pricePerDay = pricePerDay;
     }
 
-    public boolean isAvailable() {
-        return this.available;
-    }
-
     public boolean getAvailable() {
         return this.available;
     }
@@ -101,7 +130,7 @@ public class Vehicle {
         this.available = available;
     }
 
-    // Method to display vehicle details
+    // Concrete method to display vehicle details
     public void displayVehicleDetails() {
         System.out.println("----- Vehicle Details -----");
         System.out.println("Vehicle ID          : " + this.vehicleId);

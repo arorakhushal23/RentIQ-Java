@@ -2,8 +2,8 @@ package com.rentiq.model;
 
 /**
  * Represents a Motorcycle/Bike vehicle in the RentIQ system.
- * Extends Vehicle to demonstrate inheritance, constructor chaining using super,
- * method overriding, and runtime polymorphism.
+ * Extends abstract Vehicle class to implement concrete rental cost calculation
+ * and bike-specific attributes.
  */
 public class Bike extends Vehicle {
     private int engineCapacityCc;
@@ -37,6 +37,18 @@ public class Bike extends Vehicle {
 
     public void setHelmetIncluded(boolean helmetIncluded) {
         this.helmetIncluded = helmetIncluded;
+    }
+
+    /**
+     * Implementation of abstract method from Vehicle.
+     * Calculates bike rental cost: pricePerDay * days.
+     */
+    @Override
+    public double calculateRentalCost(int days) {
+        if (days <= 0) {
+            return 0.0;
+        }
+        return getPricePerDay() * days;
     }
 
     @Override
