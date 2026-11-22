@@ -2,8 +2,8 @@ package com.rentiq.model;
 
 /**
  * Represents a Motorcycle/Bike vehicle in the RentIQ system.
- * Extends abstract Vehicle class to implement concrete rental cost calculation
- * and bike-specific attributes.
+ * Extends abstract Vehicle class to implement concrete rental cost calculation,
+ * bike-specific attributes, ratings, and multi-criteria sorting.
  */
 public class Bike extends Vehicle {
     private int engineCapacityCc;
@@ -15,10 +15,16 @@ public class Bike extends Vehicle {
         setCategory("Bike");
     }
 
-    // Parameterized constructor
+    // Parameterized constructor without explicit rating
     public Bike(String vehicleId, String brand, String model, String registrationNumber,
                 double pricePerDay, boolean available, int engineCapacityCc, boolean helmetIncluded) {
-        super(vehicleId, brand, model, "Bike", registrationNumber, pricePerDay, available);
+        this(vehicleId, brand, model, registrationNumber, pricePerDay, available, engineCapacityCc, helmetIncluded, 5.0);
+    }
+
+    // Full Parameterized constructor with rating
+    public Bike(String vehicleId, String brand, String model, String registrationNumber,
+                double pricePerDay, boolean available, int engineCapacityCc, boolean helmetIncluded, double rating) {
+        super(vehicleId, brand, model, "Bike", registrationNumber, pricePerDay, available, rating);
         this.engineCapacityCc = engineCapacityCc;
         this.helmetIncluded = helmetIncluded;
     }
@@ -61,6 +67,7 @@ public class Bike extends Vehicle {
         System.out.println("Engine Capacity     : " + this.engineCapacityCc + " cc");
         System.out.println("Helmet Included     : " + (this.helmetIncluded ? "Yes" : "No"));
         System.out.println("Price Per Day       : $" + getPricePerDay());
+        System.out.println("Customer Rating     : " + String.format("%.1f", getRating()) + " / 5.0");
         System.out.println("Availability        : " + (isAvailable() ? "Available" : "Rented / Unavailable"));
         System.out.println("------------------------");
     }
