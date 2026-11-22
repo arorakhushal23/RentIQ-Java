@@ -1,12 +1,19 @@
 package com.rentiq;
 
 import com.rentiq.concurrency.AtomicityVisibilityDemo;
+import com.rentiq.concurrency.BookingConsumer;
 import com.rentiq.concurrency.BookingNotificationTask;
+import com.rentiq.concurrency.BookingProducer;
+import com.rentiq.concurrency.BookingRequestBuffer;
 import com.rentiq.concurrency.FleetMonitorThread;
+import com.rentiq.concurrency.GuardedBlockDemo;
+import com.rentiq.concurrency.NotifyAllDemo;
+import com.rentiq.concurrency.ProducerConsumerDemo;
 import com.rentiq.concurrency.RaceConditionDemo;
 import com.rentiq.concurrency.StartVsRunDemo;
 import com.rentiq.concurrency.ThreadLifecycleDemo;
 import com.rentiq.concurrency.ThreadPriorityDemo;
+import com.rentiq.concurrency.WaitNotifyDemo;
 import com.rentiq.exception.InvalidBookingException;
 import com.rentiq.exception.InvalidUserException;
 import com.rentiq.exception.VehicleNotAvailableException;
@@ -36,12 +43,14 @@ import java.util.Scanner;
  * - Multithreading Fundamentals (Thread, Runnable, start vs run, sleep, join, interrupt,
  *   lifecycle states, daemon threads, thread priorities, race conditions, synchronized bookings,
  *   atomicity, and memory visibility).
+ * - Thread Coordination (wait(), notify(), notifyAll(), guarded blocks in while loops,
+ *   Producer-Consumer bounded buffer, and graceful shutdown).
  */
 public class Main {
     public static void main(String[] args) {
         System.out.println("============================================================");
-        System.out.println("   RentIQ - Vehicle Rental System (Phase 2, Milestone 3)    ");
-        System.out.println("   Multithreading Fundamentals (Java 26 / JDK 26.0.1)       ");
+        System.out.println("   RentIQ - Vehicle Rental System (Phase 2, Milestone 4)    ");
+        System.out.println("   Thread Coordination & Producer-Consumer (Java 26)        ");
         System.out.println("============================================================\n");
 
         // 1. Initialize Core Services
@@ -118,11 +127,26 @@ public class Main {
         demonstrateMultithreadingFeatures(vehicleService, bookingService, alice, bob);
 
         // ------------------------------------------------------------
-        // SECTION F: Console Application Automated Demonstration
+        // SECTION F: Thread Coordination & Producer-Consumer (Milestone 4 Live Demonstrations)
+        // ------------------------------------------------------------
+        demonstrateThreadCoordinationFeatures(bookingService, vehicleService, alice, bob, elena);
+
+        // ------------------------------------------------------------
+        // SECTION G: Console Application Automated Demonstration
         // ------------------------------------------------------------
         System.out.println("\n>>> Launching Console Application Demonstration <<<");
         String simulatedConsoleInput =
-            // 1. Main menu option 13: Enter Milestone 3 Submenu
+            // 1. Main menu option 14: Enter Milestone 4 Submenu (Thread Coordination)
+            "14\n" +
+            "1\n" +                       // Submenu 1: wait()
+            "2\n" +                       // Submenu 2: notify()
+            "3\n" +                       // Submenu 3: notifyAll()
+            "4\n" +                       // Submenu 4: Guarded blocks
+            "5\n" +                       // Submenu 5: Producer-Consumer simulation
+            "6\n" +                       // Submenu 6: Integrated booking processing
+            "7\n" +                       // Submenu 7: Graceful thread shutdown
+            "8\n" +                       // Submenu 8: Return to Main Menu
+            // 2. Main menu option 13: Enter Milestone 3 Submenu (Multithreading Fundamentals)
             "13\n" +
             "1\n" +                       // Submenu 1: Thread creation via Thread
             "2\n" +                       // Submenu 2: Thread creation via Runnable
@@ -137,21 +161,49 @@ public class Main {
             "11\n" +                      // Submenu 11: Race condition vs synchronized booking
             "12\n" +                      // Submenu 12: Atomicity & visibility
             "13\n" +                      // Submenu 13: Return to Main Menu
-            // 2. Main menu operations
+            // 3. Main menu operations
             "12\n" + "1\n" + "U1001\n" + "14\n" + // Milestone 2 submenu HashMap lookup then return
             "8\n" + "\n" +                // 8. View Recently Viewed Vehicles (LinkedList)
             "9\n" +                       // 9. View Unique Categories (HashSet/LinkedHashSet)
             "10\n" +                      // 10. View Sorted Categories (TreeSet)
             "99\n" +                      // Invalid choice test
-            "14\n";                       // 14. Exit
+            "15\n";                       // 15. Exit
 
         Scanner consoleScanner = new Scanner(simulatedConsoleInput);
         ConsoleApp consoleApp = new ConsoleApp(userService, vehicleService, bookingService, consoleScanner);
         consoleApp.start();
 
         System.out.println("\n============================================================");
-        System.out.println("   RentIQ Phase 2 Milestone 3 Completed Successfully!       ");
+        System.out.println("   RentIQ Phase 2 Milestone 4 Completed Successfully!       ");
         System.out.println("============================================================");
+    }
+
+    /**
+     * Live comprehensive verification of Milestone 4 Thread Coordination:
+     * 1. wait() and notify() (Single producer & waiting consumer with state verification)
+     * 2. notifyAll() with multiple waiting consumers and condition recheck
+     * 3. Guarded blocks with condition testing inside while loops
+     * 4. Complete Producer-Consumer workflow with bounded buffer and graceful shutdown
+     */
+    private static void demonstrateThreadCoordinationFeatures(BookingService bookingService, VehicleService vehicleService,
+                                                             Customer alice, Customer bob, Customer elena) {
+        System.out.println("\n============================================================");
+        System.out.println("   Milestone 4: Thread Coordination Live Demonstrations     ");
+        System.out.println("============================================================\n");
+
+        // 1. wait() and notify()
+        Vehicle v1 = vehicleService.searchVehicleById("V101");
+        WaitNotifyDemo.runDemo(alice, v1);
+
+        // 2. notifyAll() with Multiple Waiting Consumers
+        Vehicle v2 = vehicleService.searchVehicleById("V102");
+        NotifyAllDemo.runDemo(bob, v1, v2);
+
+        // 3. Guarded Block Condition Checking
+        GuardedBlockDemo.runDemo();
+
+        // 4. Integrated Producer-Consumer Simulation
+        ProducerConsumerDemo.runSimulation(bookingService, vehicleService, alice, bob, elena);
     }
 
     /**

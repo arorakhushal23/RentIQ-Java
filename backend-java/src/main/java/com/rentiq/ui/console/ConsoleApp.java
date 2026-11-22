@@ -1,12 +1,19 @@
 package com.rentiq.ui.console;
 
 import com.rentiq.concurrency.AtomicityVisibilityDemo;
+import com.rentiq.concurrency.BookingConsumer;
 import com.rentiq.concurrency.BookingNotificationTask;
+import com.rentiq.concurrency.BookingProducer;
+import com.rentiq.concurrency.BookingRequestBuffer;
 import com.rentiq.concurrency.FleetMonitorThread;
+import com.rentiq.concurrency.GuardedBlockDemo;
+import com.rentiq.concurrency.NotifyAllDemo;
+import com.rentiq.concurrency.ProducerConsumerDemo;
 import com.rentiq.concurrency.RaceConditionDemo;
 import com.rentiq.concurrency.StartVsRunDemo;
 import com.rentiq.concurrency.ThreadLifecycleDemo;
 import com.rentiq.concurrency.ThreadPriorityDemo;
+import com.rentiq.concurrency.WaitNotifyDemo;
 import com.rentiq.exception.InvalidBookingException;
 import com.rentiq.exception.InvalidUserException;
 import com.rentiq.exception.VehicleNotAvailableException;
@@ -22,14 +29,17 @@ import com.rentiq.util.CollectionDemo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Console interface for the RentIQ Vehicle Rental Management System.
- * Fully integrates Phase 1, Phase 2 Milestone 1, Milestone 2, and Milestone 3 (Multithreading):
+ * Fully integrates Phase 1, Phase 2 Milestone 1, Milestone 2, Milestone 3, and Milestone 4:
  * - Main menu with core rental operations and collections.
  * - Milestone 2 Submenu (Maps, Queues, Iterators, Sorting).
  * - Milestone 3 Submenu (Multithreading Fundamentals: Thread, Runnable, start vs run, sleep,
  *   join, interrupt, lifecycle states, daemon threads, priorities, race conditions, atomicity, visibility).
+ * - Milestone 4 Submenu (Thread Coordination: wait, notify, notifyAll, guarded blocks,
+ *   Producer-Consumer bounded buffer, and graceful shutdown).
  */
 public class ConsoleApp {
     private final UserService userService;
@@ -55,7 +65,7 @@ public class ConsoleApp {
 
         while (running) {
             displayMainMenu();
-            System.out.print("Enter your choice (1-14): ");
+            System.out.print("Enter your choice (1-15): ");
 
             if (!scanner.hasNextLine()) {
                 System.out.println("\n[Console] No input stream detected. Exiting console session.");
@@ -67,7 +77,7 @@ public class ConsoleApp {
             try {
                 choice = Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.println("[Error] Invalid numeric input: '" + input + "'. Please enter a number between 1 and 14.\n");
+                System.out.println("[Error] Invalid numeric input: '" + input + "'. Please enter a number between 1 and 15.\n");
                 continue;
             }
 
@@ -112,11 +122,14 @@ public class ConsoleApp {
                     handleMultithreadingSubmenu();
                     break;
                 case 14:
+                    handleThreadCoordinationSubmenu();
+                    break;
+                case 15:
                     System.out.println("\n[Console] Thank you for using RentIQ. Goodbye!");
                     running = false;
                     break;
                 default:
-                    System.out.println("[Error] Invalid selection (" + choice + "). Please choose a valid option from 1 to 14.\n");
+                    System.out.println("[Error] Invalid selection (" + choice + "). Please choose a valid option from 1 to 15.\n");
                     break;
             }
         }
@@ -137,7 +150,8 @@ public class ConsoleApp {
         System.out.println("11. Run Complete Collections Framework Demonstration");
         System.out.println("12. Maps, Queues, Iterators & Sorting Submenu (Milestone 2)");
         System.out.println("13. Multithreading Demonstrations Submenu (Milestone 3)");
-        System.out.println("14. Exit");
+        System.out.println("14. Thread Coordination Demonstrations Submenu (Milestone 4)");
+        System.out.println("15. Exit");
         System.out.println("----------------------------------------------------");
     }
 
@@ -380,6 +394,187 @@ public class ConsoleApp {
             RaceConditionDemo.demoSynchronizedBooking(bookingService, customer1, customer2, target);
         } else {
             System.out.println("[Error] Missing sample entities for race condition comparison.");
+        }
+    }
+
+    // ==========================================================
+    // Milestone 4: Thread Coordination Submenu
+    // ==========================================================
+
+    private void handleThreadCoordinationSubmenu() {
+        boolean inSubmenu = true;
+        while (inSubmenu) {
+            System.out.println("\n======= Thread Coordination Demonstrations (Phase 2 - Milestone 4) =======");
+            System.out.println("1. Demonstrate wait() (Consumer Waiting on Empty Buffer)");
+            System.out.println("2. Demonstrate notify() (Producer Signaling Waiting Consumer)");
+            System.out.println("3. Demonstrate notifyAll() (Multiple Waiting Consumers & Condition Recheck)");
+            System.out.println("4. Demonstrate guarded blocks (while loop condition testing & spurious wakeups)");
+            System.out.println("5. Run Producer-Consumer simulation (Multi-threaded buffer processing)");
+            System.out.println("6. Run integrated RentIQ booking request processing");
+            System.out.println("7. Demonstrate graceful thread shutdown (Buffer shutdown & consumer termination)");
+            System.out.println("8. Return to Main Menu");
+            System.out.println("==========================================================================");
+            System.out.print("Enter your choice (1-8): ");
+
+            if (!scanner.hasNextLine()) {
+                break;
+            }
+
+            String input = scanner.nextLine().trim();
+            int subChoice = -1;
+            try {
+                subChoice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("[Error] Invalid numeric choice: '" + input + "'.\n");
+                continue;
+            }
+
+            switch (subChoice) {
+                case 1:
+                    handleWaitDemo();
+                    break;
+                case 2:
+                    handleNotifyDemo();
+                    break;
+                case 3:
+                    handleNotifyAllDemo();
+                    break;
+                case 4:
+                    handleGuardedBlockDemo();
+                    break;
+                case 5:
+                    handleProducerConsumerSimulation();
+                    break;
+                case 6:
+                    handleIntegratedBookingProcessing();
+                    break;
+                case 7:
+                    handleGracefulShutdownDemo();
+                    break;
+                case 8:
+                    inSubmenu = false;
+                    break;
+                default:
+                    System.out.println("[Error] Invalid selection (" + subChoice + "). Enter a number between 1 and 8.\n");
+                    break;
+            }
+        }
+    }
+
+    private void handleWaitDemo() {
+        System.out.println("\n--- 1. wait() Demonstration: Atomic Lock Release & State Transition ---");
+        System.out.println("A calling thread must hold the object's monitor lock before invoking wait().");
+        System.out.println("Upon invoking wait(), the thread ATOMICALLY releases the monitor and enters the WAITING state.");
+        Customer customer = (Customer) userService.findUserById("U1001");
+        Vehicle vehicle = vehicleService.searchVehicleById("V101");
+        if (customer == null || vehicle == null) {
+            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123", "Standard");
+            vehicle = vehicleService.getAllVehicles().get(0);
+        }
+        WaitNotifyDemo.runDemo(customer, vehicle);
+    }
+
+    private void handleNotifyDemo() {
+        System.out.println("\n--- 2. notify() Demonstration: Waking a Single Waiting Thread ---");
+        System.out.println("A calling thread holding the monitor lock calls notify() to wake an arbitrary waiting thread.");
+        System.out.println("Important: The awakened thread does NOT resume execution immediately; it must wait until the signaling thread exits its synchronized block.");
+        Customer customer = (Customer) userService.findUserById("U1001");
+        Vehicle vehicle = vehicleService.searchVehicleById("V102");
+        if (customer == null || vehicle == null) {
+            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123", "Standard");
+            vehicle = vehicleService.getAllVehicles().get(0);
+        }
+        WaitNotifyDemo.runDemo(customer, vehicle);
+    }
+
+    private void handleNotifyAllDemo() {
+        System.out.println("\n--- 3. notifyAll() Demonstration: Waking Multiple Waiting Consumers ---");
+        Customer customer = (Customer) userService.findUserById("U1001");
+        Vehicle v1 = vehicleService.searchVehicleById("V101");
+        Vehicle v2 = vehicleService.searchVehicleById("V102");
+        if (customer == null || v1 == null || v2 == null) {
+            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123", "Standard");
+            v1 = vehicleService.getAllVehicles().get(0);
+            v2 = vehicleService.getAllVehicles().get(1);
+        }
+        NotifyAllDemo.runDemo(customer, v1, v2);
+    }
+
+    private void handleGuardedBlockDemo() {
+        System.out.println("\n--- 4. Guarded Block Demonstration: Polling Conditions inside while loop ---");
+        GuardedBlockDemo.runDemo();
+    }
+
+    private void handleProducerConsumerSimulation() {
+        System.out.println("\n--- 5. Producer-Consumer Simulation: Bounded Buffer with Worker Threads ---");
+        Customer c1 = (Customer) userService.findUserById("U1001");
+        Customer c2 = (Customer) userService.findUserById("U1002");
+        Customer c3 = (Customer) userService.findUserById("U1003");
+        if (c1 == null) c1 = new Customer("U1001", "Alice", "a@test.com", "123", "pass", "DL1", "Gold");
+        if (c2 == null) c2 = new Customer("U1002", "Bob", "b@test.com", "456", "pass", "DL2", "Standard");
+        if (c3 == null) c3 = new Customer("U1003", "Elena", "e@test.com", "789", "pass", "DL3", "VIP");
+        ProducerConsumerDemo.runSimulation(bookingService, vehicleService, c1, c2, c3);
+    }
+
+    private void handleIntegratedBookingProcessing() {
+        System.out.println("\n--- 6. Integrated RentIQ Booking Request Processing ---");
+        Customer customer = (Customer) userService.findUserById("U1001");
+        if (customer == null) customer = new Customer("U1001", "Alice", "a@test.com", "123", "pass", "DL1", "Gold");
+        List<Vehicle> fleet = vehicleService.getAllVehicles();
+        if (fleet.size() < 2) {
+            System.out.println("[Error] Insufficient fleet vehicles.");
+            return;
+        }
+
+        BookingRequestBuffer buffer = new BookingRequestBuffer(2);
+        AtomicInteger processed = new AtomicInteger(0);
+        BookingConsumer consumer = new BookingConsumer(buffer, bookingService, "RentIQ-Worker-1", processed);
+        Thread cThread = new Thread(consumer, "RentIQ-Worker-1");
+        cThread.start();
+
+        List<BookingRequest> reqs = new ArrayList<>();
+        reqs.add(new BookingRequest(BookingRequest.generateNextRequestId(), customer, fleet.get(0), 2));
+        reqs.add(new BookingRequest(BookingRequest.generateNextRequestId(), customer, fleet.get(1), 3));
+        BookingProducer producer = new BookingProducer(buffer, reqs, 60);
+        Thread pThread = new Thread(producer, "RentIQ-Producer");
+        pThread.start();
+
+        try {
+            pThread.join();
+            while (!buffer.isEmpty()) {
+                Thread.sleep(20);
+            }
+            buffer.shutdown();
+            cThread.join();
+            System.out.println("[Integrated Processing] Successfully processed " + processed.get() + " bookings.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void handleGracefulShutdownDemo() {
+        System.out.println("\n--- 7. Graceful Thread Shutdown Demonstration ---");
+        System.out.println("Demonstrating how buffer.shutdown() unblocks waiting consumer threads cleanly.");
+        BookingRequestBuffer buffer = new BookingRequestBuffer(3);
+        AtomicInteger processed = new AtomicInteger(0);
+        Thread c1 = new Thread(new BookingConsumer(buffer, bookingService, "ShutdownWorker-1", processed), "ShutdownWorker-1");
+        Thread c2 = new Thread(new BookingConsumer(buffer, bookingService, "ShutdownWorker-2", processed), "ShutdownWorker-2");
+        c1.start();
+        c2.start();
+
+        try {
+            Thread.sleep(100);
+            System.out.println("  Inspected state of ShutdownWorker-1: " + c1.getState() + " (Waiting on buffer)");
+            System.out.println("  Inspected state of ShutdownWorker-2: " + c2.getState() + " (Waiting on buffer)");
+            System.out.println("  Invoking buffer.shutdown() to wake all waiting threads...");
+            buffer.shutdown();
+            c1.join(500);
+            c2.join(500);
+            System.out.println("  State of ShutdownWorker-1 after shutdown: " + c1.getState());
+            System.out.println("  State of ShutdownWorker-2 after shutdown: " + c2.getState());
+            System.out.println("  Graceful shutdown completed with 0 hung threads.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
