@@ -1,0 +1,2 @@
+-- RentIQ Database Schema
+-- Vehicle Rental Management System
