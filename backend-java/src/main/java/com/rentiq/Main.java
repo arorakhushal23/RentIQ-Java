@@ -1,5 +1,12 @@
 package com.rentiq;
 
+import com.rentiq.concurrency.AtomicityVisibilityDemo;
+import com.rentiq.concurrency.BookingNotificationTask;
+import com.rentiq.concurrency.FleetMonitorThread;
+import com.rentiq.concurrency.RaceConditionDemo;
+import com.rentiq.concurrency.StartVsRunDemo;
+import com.rentiq.concurrency.ThreadLifecycleDemo;
+import com.rentiq.concurrency.ThreadPriorityDemo;
 import com.rentiq.exception.InvalidBookingException;
 import com.rentiq.exception.InvalidUserException;
 import com.rentiq.exception.VehicleNotAvailableException;
@@ -21,18 +28,20 @@ import java.util.Scanner;
  * Main application class for RentIQ Vehicle Rental Management System.
  * Fully integrates:
  * - Domain Models (User, Customer, Admin, Vehicle, Car, Bike, Booking, BookingRequest)
- * - Java Collections Framework (ArrayList, LinkedList, HashSet, LinkedHashSet, TreeSet)
+ * - Collections Framework (ArrayList, LinkedList, HashSet, LinkedHashSet, TreeSet)
  * - Map Collections (HashMap, LinkedHashMap, TreeMap)
  * - Queue Collections (Queue FIFO, Deque ArrayDeque, PriorityQueue)
  * - Iterators (Iterator safe removal, ListIterator bidirectional traversal)
  * - Sorting (Comparable natural order, Comparator multi-criteria)
- * - Interactive and Automated Console Application
+ * - Multithreading Fundamentals (Thread, Runnable, start vs run, sleep, join, interrupt,
+ *   lifecycle states, daemon threads, thread priorities, race conditions, synchronized bookings,
+ *   atomicity, and memory visibility).
  */
 public class Main {
     public static void main(String[] args) {
         System.out.println("============================================================");
-        System.out.println("   RentIQ - Vehicle Rental System (Phase 2, Milestone 2)    ");
-        System.out.println("   Maps, Queues, Iterators & Multi-Criteria Sorting         ");
+        System.out.println("   RentIQ - Vehicle Rental System (Phase 2, Milestone 3)    ");
+        System.out.println("   Multithreading Fundamentals (Java 26 / JDK 26.0.1)       ");
         System.out.println("============================================================\n");
 
         // 1. Initialize Core Services
@@ -41,7 +50,6 @@ public class Main {
         BookingService bookingService = new BookingService();
 
         // 2. Pre-seed fleet vehicles with diverse prices and ratings
-        // Vehicles implement Comparable<Vehicle> (natural ordering by ID)
         Vehicle v1  = new Car("V101", "Tesla", "Model 3", "TS-01-EV", 85.0, true, 5, "Electric", 4.9);
         Vehicle v2  = new Car("V102", "Toyota", "RAV4", "TY-02-SUV", 65.0, true, 5, "Hybrid", 4.6);
         Vehicle v3  = new Bike("B201", "Yamaha", "YZF-R3", "YM-01-BK", 45.0, true, 321, true, 4.7);
@@ -68,12 +76,7 @@ public class Main {
         vehicleService.addVehicle(v11);
         vehicleService.addVehicle(v12);
 
-        // Verify Duplicate ID Prevention in HashMap
-        System.out.println("\n>>> Testing Duplicate ID Rejection:");
-        boolean dupAdded = vehicleService.addVehicle(new Car("V101", "Duplicate", "Tesla", "DUP-01", 99.0, true, 5, "Electric", 1.0));
-        System.out.println("Duplicate Vehicle ID 'V101' rejected successfully: " + (!dupAdded));
-
-        // Pre-seed sample users (Regular and VIP customers, plus Admin)
+        // Pre-seed sample users (Regular, Gold, and VIP customers, plus Admin)
         Customer alice = null;
         Customer bob = null;
         Customer elena = null;
@@ -105,59 +108,143 @@ public class Main {
         CollectionDemo.runAllDemos();
 
         // ------------------------------------------------------------
-        // SECTION D: Live Demonstration of Milestone 2 Core Features
+        // SECTION D: Maps, Queues, Iterators & Sorting (Milestone 2 Features)
         // ------------------------------------------------------------
         demonstrateMilestone2Features(userService, vehicleService, bookingService, alice, bob, elena, carlos);
 
         // ------------------------------------------------------------
-        // SECTION E: Console Application Automated Demonstration
+        // SECTION E: Multithreading Fundamentals (Milestone 3 Live Demonstrations)
+        // ------------------------------------------------------------
+        demonstrateMultithreadingFeatures(vehicleService, bookingService, alice, bob);
+
+        // ------------------------------------------------------------
+        // SECTION F: Console Application Automated Demonstration
         // ------------------------------------------------------------
         System.out.println("\n>>> Launching Console Application Demonstration <<<");
         String simulatedConsoleInput =
-            // 1. Main menu option 12: Enter Milestone 2 Submenu
-            "12\n" +
-            "1\n" + "U1001\n" +                        // Submenu 1: Search User by ID (HashMap)
-            "2\n" + "V101\n" +                         // Submenu 2: Search Vehicle by ID (HashMap)
-            "3\n" + "BK-1001\n" +                      // Submenu 3: Search Booking by ID (HashMap)
-            "4\n" +                                    // Submenu 4: Display LinkedHashMap records
-            "5\n" +                                    // Submenu 5: Display TreeMap records
-            "6\n" + "U1001\n" + "V102\n" + "3\n" +      // Submenu 6: Submit Pending Request (FIFO)
-            "7\n" +                                    // Submenu 7: Display Pending Requests (FIFO)
-            "8\n" +                                    // Submenu 8: Process Next FIFO Request
-            "9\n" +                                    // Submenu 9: Demonstrate Deque operations
-            "10\n" +                                   // Submenu 10: Demonstrate PriorityQueue processing
-            "11\n" +                                   // Submenu 11: Demonstrate Iterator and ListIterator
-            "12\n" +                                   // Submenu 12: Sort Vehicles using Comparable
-            "13\n" + "1\n" +                           // Submenu 13: Sort by Price Ascending
-            "14\n" +                                   // Submenu 14: Return to Main Menu
+            // 1. Main menu option 13: Enter Milestone 3 Submenu
+            "13\n" +
+            "1\n" +                       // Submenu 1: Thread creation via Thread
+            "2\n" +                       // Submenu 2: Thread creation via Runnable
+            "3\n" +                       // Submenu 3: start() vs run()
+            "4\n" +                       // Submenu 4: sleep()
+            "5\n" +                       // Submenu 5: join()
+            "6\n" +                       // Submenu 6: interrupt()
+            "7\n" +                       // Submenu 7: Thread lifecycle states
+            "8\n" +                       // Submenu 8: Daemon threads
+            "9\n" +                       // Submenu 9: Thread priorities
+            "10\n" +                      // Submenu 10: Concurrent synchronized booking
+            "11\n" +                      // Submenu 11: Race condition vs synchronized booking
+            "12\n" +                      // Submenu 12: Atomicity & visibility
+            "13\n" +                      // Submenu 13: Return to Main Menu
             // 2. Main menu operations
-            "8\n" + "\n" +                             // 8. View Recently Viewed Vehicles (LinkedList)
-            "9\n" +                                    // 9. View Unique Categories (HashSet/LinkedHashSet)
-            "10\n" +                                   // 10. View Sorted Categories (TreeSet)
-            "99\n" +                                   // Invalid input test
-            "13\n";                                    // 13. Exit
+            "12\n" + "1\n" + "U1001\n" + "14\n" + // Milestone 2 submenu HashMap lookup then return
+            "8\n" + "\n" +                // 8. View Recently Viewed Vehicles (LinkedList)
+            "9\n" +                       // 9. View Unique Categories (HashSet/LinkedHashSet)
+            "10\n" +                      // 10. View Sorted Categories (TreeSet)
+            "99\n" +                      // Invalid choice test
+            "14\n";                       // 14. Exit
 
         Scanner consoleScanner = new Scanner(simulatedConsoleInput);
         ConsoleApp consoleApp = new ConsoleApp(userService, vehicleService, bookingService, consoleScanner);
         consoleApp.start();
 
         System.out.println("\n============================================================");
-        System.out.println("   RentIQ Phase 2 Milestone 2 Completed Successfully!       ");
+        System.out.println("   RentIQ Phase 2 Milestone 3 Completed Successfully!       ");
         System.out.println("============================================================");
     }
 
     /**
-     * Deep programmatic verification and demonstration of Milestone 2 features:
-     * - HashMap O(1) lookup
-     * - LinkedHashMap insertion order preservation
-     * - TreeMap sorted ID ordering
-     * - Queue FIFO request scheduling and empty queue handling
-     * - Deque front/rear operations
-     * - PriorityQueue VIP tier scheduling and FIFO sequence tie-breaking
-     * - Iterator safe removal and ListIterator bidirectional traversal
-     * - Comparable natural sorting
-     * - Comparator multi-criteria sorting
+     * Live comprehensive verification of Milestone 3 Multithreading Fundamentals:
+     * 1. Thread creation: Extending Thread (FleetMonitorThread)
+     * 2. Thread creation: Implementing Runnable (BookingNotificationTask)
+     * 3. start() vs run()
+     * 4. sleep(), join(), and interrupt()
+     * 5. Thread Lifecycle States (NEW, RUNNABLE, TIMED_WAITING, WAITING, BLOCKED, TERMINATED)
+     * 6. Daemon thread status and behavior
+     * 7. Thread priorities (MIN_PRIORITY, NORM_PRIORITY, MAX_PRIORITY)
+     * 8. Race condition simulation vs Synchronized booking solution
+     * 9. Atomicity (Unsafe vs Sync vs AtomicInteger) & Visibility (volatile flag)
      */
+    private static void demonstrateMultithreadingFeatures(VehicleService vehicleService, BookingService bookingService,
+                                                         Customer alice, Customer bob) {
+        System.out.println("\n============================================================");
+        System.out.println("   Milestone 3: Multithreading Live Demonstrations          ");
+        System.out.println("============================================================\n");
+
+        // 1. Thread creation using Thread subclass
+        System.out.println(">>> 1. Thread Creation via Thread Subclass (FleetMonitorThread):");
+        FleetMonitorThread monitor = new FleetMonitorThread(vehicleService, 150);
+        monitor.setName("FleetAudit-Thread");
+        monitor.start();
+        try {
+            Thread.sleep(350); // Let monitor run two cycles
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        monitor.stopMonitoring();
+        try {
+            monitor.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // 2. Thread creation using Runnable
+        System.out.println("\n>>> 2. Thread Creation via Runnable (BookingNotificationTask):");
+        Vehicle notifVeh = vehicleService.searchVehicleById("V101");
+        Booking sampleBooking = new Booking("BK-ASYNC-10", alice, notifVeh, 4);
+        BookingNotificationTask notifTask = new BookingNotificationTask(sampleBooking, "EMAIL");
+        Thread notifThread = new Thread(notifTask, "EmailDispatcher-Thread");
+        notifThread.start();
+        try {
+            notifThread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // 3. start() vs run()
+        StartVsRunDemo.runDemo();
+
+        // 4. Thread Lifecycle States
+        ThreadLifecycleDemo.runDemo();
+
+        // 5. Thread Priorities
+        ThreadPriorityDemo.runDemo();
+
+        // 6. Daemon Thread Demonstration
+        System.out.println(">>> 6. Daemon Thread Demonstration:");
+        Thread daemonWorker = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }, "Telemetry-Daemon-Thread");
+        daemonWorker.setDaemon(true);
+        daemonWorker.start();
+        System.out.println("  Worker Thread: " + daemonWorker.getName() + " | isDaemon: " + daemonWorker.isDaemon());
+        System.out.println("  Daemon threads do not prevent the JVM from shutting down when user threads complete.");
+        daemonWorker.interrupt();
+        try {
+            daemonWorker.join(200);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // 7. Atomicity and Visibility
+        AtomicityVisibilityDemo.runDemo();
+
+        // 8. Race Condition vs Synchronized Booking
+        System.out.println(">>> 8. Race Condition Simulation vs Thread-Safe Synchronized Booking:");
+        Vehicle targetVehicle = vehicleService.searchVehicleById("V102");
+        RaceConditionDemo.demoUnsafeBooking(alice, bob, targetVehicle);
+        RaceConditionDemo.demoSynchronizedBooking(bookingService, alice, bob, targetVehicle);
+
+        System.out.println("============================================================\n");
+    }
+
     private static void demonstrateMilestone2Features(UserService userService, VehicleService vehicleService,
                                                      BookingService bookingService,
                                                      Customer alice, Customer bob, Customer elena, Customer carlos) {
@@ -166,114 +253,23 @@ public class Main {
         System.out.println("============================================================\n");
 
         // 1. HashMap Lookups
-        System.out.println(">>> 1. HashMap O(1) Entity Lookup Verification:");
         User foundUser = userService.findUserById("U1001");
         Vehicle foundVehicle = vehicleService.searchVehicleById("V101");
         System.out.println("HashMap User Lookup: " + (foundUser != null ? foundUser.getName() : "NOT FOUND"));
         System.out.println("HashMap Vehicle Lookup: " + (foundVehicle != null ? foundVehicle.getName() : "NOT FOUND"));
 
-        // 2. LinkedHashMap Insertion-Order Verification
-        System.out.println("\n>>> 2. LinkedHashMap Chronological Insertion Order Verification:");
-        userService.displayRecentRegistrations();
-        vehicleService.displayVehiclesByInsertionOrder();
-
-        // 3. TreeMap Key-Sorted Verification
-        System.out.println(">>> 3. TreeMap Alphabetically Sorted Vehicle ID Keys:");
-        vehicleService.displayVehiclesSortedById();
-
-        // 4. Queue (FIFO) Verification
-        System.out.println(">>> 4. FIFO Queue Pending Booking Requests Verification:");
+        // 2. FIFO Queue
         Vehicle reqVehicle1 = vehicleService.searchVehicleById("V103");
-        Vehicle reqVehicle2 = vehicleService.searchVehicleById("V104");
-
-        // Submit in FIFO order: Bob, then Carlos
         bookingService.submitBookingRequest(bob, reqVehicle1, 2);
-        bookingService.submitBookingRequest(carlos, reqVehicle2, 4);
-
-        System.out.println("\nQueue state before processing:");
-        bookingService.displayPendingRequests();
-
-        // Process next FIFO request (should process Bob first)
         try {
-            Booking processed1 = bookingService.processNextBookingRequest();
-            System.out.println("Processed FIFO #1 (Customer: " + processed1.getCustomer().getName() + ", Vehicle: " + processed1.getVehicle().getVehicleId() + ")");
+            bookingService.processNextBookingRequest();
         } catch (Exception e) {
             System.out.println("[Error] " + e.getMessage());
         }
 
-        // 5. Empty Queue Safe Handling
-        System.out.println("\n>>> 5. Empty Queue Safe Handling Verification:");
-        try {
-            // Drain remaining and then test empty poll
-            bookingService.processNextBookingRequest(); // Drains Carlos
-            Booking emptyPoll = bookingService.processNextBookingRequest(); // Queue is now empty
-            System.out.println("Safe poll on empty queue returned null: " + (emptyPoll == null));
-        } catch (Exception e) {
-            System.out.println("[Error] " + e.getMessage());
-        }
-
-        // 6. Deque (ArrayDeque) Operations
-        System.out.println("\n>>> 6. Deque (ArrayDeque) Front and Rear Operations Verification:");
-        BookingRequest normalReq = new BookingRequest(BookingRequest.generateNextRequestId(), carlos, reqVehicle1, 1);
-        BookingRequest expressReq = new BookingRequest(BookingRequest.generateNextRequestId(), alice, reqVehicle2, 3);
-        bookingService.addRequestToRear(normalReq);
-        bookingService.addRequestToFront(expressReq);
-        bookingService.displayDequeRequests();
-        BookingRequest polledFront = bookingService.removeRequestFromFront();
-        BookingRequest polledRear = bookingService.removeRequestFromRear();
-        System.out.println("Polled from front was express request: " + (polledFront == expressReq));
-        System.out.println("Polled from rear was standard request: " + (polledRear == normalReq));
-
-        // 7. PriorityQueue (Priority Scoring & Sequence Tie-breaking)
-        System.out.println("\n>>> 7. PriorityQueue Membership Tier Verification:");
-        Vehicle pVeh1 = vehicleService.searchVehicleById("V105");
-        Vehicle pVeh2 = vehicleService.searchVehicleById("V106");
-        Vehicle pVeh3 = vehicleService.searchVehicleById("V107");
-
-        // Submit Standard customer first, Gold second, VIP third
-        BookingRequest rStandard = new BookingRequest(BookingRequest.generateNextRequestId(), carlos, pVeh1, 2); // Score: 1
-        BookingRequest rGold = new BookingRequest(BookingRequest.generateNextRequestId(), elena, pVeh2, 3);      // Score: 2
-        BookingRequest rVip = new BookingRequest(BookingRequest.generateNextRequestId(), alice, pVeh3, 5);       // Score: 3
-
-        bookingService.submitPriorityBookingRequest(rStandard);
-        bookingService.submitPriorityBookingRequest(rGold);
-        bookingService.submitPriorityBookingRequest(rVip);
-
-        System.out.println("\nPriorityQueue drain order (VIP first, then Gold, then Standard):");
-        try {
-            Booking p1 = bookingService.processNextPriorityRequest(); // Alice (VIP)
-            Booking p2 = bookingService.processNextPriorityRequest(); // Elena (Gold)
-            Booking p3 = bookingService.processNextPriorityRequest(); // Carlos (Standard)
-            System.out.println("First processed: " + p1.getCustomer().getName() + " (" + p1.getCustomer().getMembershipLevel() + ")");
-            System.out.println("Second processed: " + p2.getCustomer().getName() + " (" + p2.getCustomer().getMembershipLevel() + ")");
-            System.out.println("Third processed: " + p3.getCustomer().getName() + " (" + p3.getCustomer().getMembershipLevel() + ")");
-        } catch (Exception e) {
-            System.out.println("[PriorityQueue Error] " + e.getMessage());
-        }
-
-        // 8. ListIterator Bidirectional Traversal
-        System.out.println("\n>>> 8. ListIterator Bidirectional Traversal Verification:");
-        vehicleService.traverseVehiclesBidirectional();
-
-        // 9. Iterator Safe Structural Removal
-        System.out.println(">>> 9. Iterator Safe Removal of Unavailable Vehicles:");
-        // Mark one vehicle unavailable and safely remove it via Iterator
-        vehicleService.updateVehicleAvailability("B205", false);
-        int removed = vehicleService.removeUnavailableVehiclesWithIterator();
-        System.out.println("Safely removed unavailable vehicles count: " + removed);
-
-        // 10. Comparable Natural Sorting
-        System.out.println(">>> 10. Comparable Natural Sorting by Vehicle ID:");
+        // 3. Sorting with Comparable and Comparator
         vehicleService.displayVehiclesSortedNaturally();
-
-        // 11. Comparator Sorting Multi-Criteria
-        System.out.println(">>> 11. Comparator Multi-Criteria Sorting:");
         vehicleService.displayVehiclesSortedByPriceAsc();
-        vehicleService.displayVehiclesSortedByPriceDesc();
-        vehicleService.displayVehiclesSortedByName();
-        vehicleService.displayVehiclesSortedByRatingDesc();
-
-        System.out.println("============================================================\n");
     }
 
     private static void demonstrateStringHandling() {
@@ -329,7 +325,6 @@ public class Main {
     private static void demonstrateExceptionHandling(UserService userService, VehicleService vehicleService, BookingService bookingService) {
         System.out.println("\n>>> 3. Exception Handling Demonstrations (try-catch-finally):");
 
-        System.out.println("\n--- Test A: Handling InvalidUserException (invalid email) ---");
         try {
             userService.registerCustomer("Invalid User", "not-an-email", "+1-555-0000", "pass", "DL-999", "Standard");
         } catch (InvalidUserException e) {
@@ -338,7 +333,6 @@ public class Main {
             System.out.println("[Finally Block A] User validation attempted.");
         }
 
-        System.out.println("\n--- Test B: Handling InvalidBookingException (0 days duration) ---");
         Customer customer = (Customer) userService.findUserById("U1001");
         Vehicle vehicle = vehicleService.searchVehicleById("V101");
         try {
@@ -351,7 +345,6 @@ public class Main {
             System.out.println("[Finally Block B] Duration validation check completed.");
         }
 
-        System.out.println("\n--- Test C: Handling VehicleNotAvailableException (double booking) ---");
         try {
             bookingService.createBooking(customer, vehicle, 3);
             Customer customerBob = (Customer) userService.findUserById("U1002");

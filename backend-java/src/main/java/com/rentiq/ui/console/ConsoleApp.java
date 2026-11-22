@@ -1,5 +1,12 @@
 package com.rentiq.ui.console;
 
+import com.rentiq.concurrency.AtomicityVisibilityDemo;
+import com.rentiq.concurrency.BookingNotificationTask;
+import com.rentiq.concurrency.FleetMonitorThread;
+import com.rentiq.concurrency.RaceConditionDemo;
+import com.rentiq.concurrency.StartVsRunDemo;
+import com.rentiq.concurrency.ThreadLifecycleDemo;
+import com.rentiq.concurrency.ThreadPriorityDemo;
 import com.rentiq.exception.InvalidBookingException;
 import com.rentiq.exception.InvalidUserException;
 import com.rentiq.exception.VehicleNotAvailableException;
@@ -12,12 +19,17 @@ import com.rentiq.service.BookingService;
 import com.rentiq.service.UserService;
 import com.rentiq.service.VehicleService;
 import com.rentiq.util.CollectionDemo;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 /**
  * Console interface for the RentIQ Vehicle Rental Management System.
- * Exposes all Phase 1 and Phase 2 (Milestones 1 & 2) features:
- * - Lists, Sets, Maps, Queues, Iterators, Comparable & Comparator Sorting.
+ * Fully integrates Phase 1, Phase 2 Milestone 1, Milestone 2, and Milestone 3 (Multithreading):
+ * - Main menu with core rental operations and collections.
+ * - Milestone 2 Submenu (Maps, Queues, Iterators, Sorting).
+ * - Milestone 3 Submenu (Multithreading Fundamentals: Thread, Runnable, start vs run, sleep,
+ *   join, interrupt, lifecycle states, daemon threads, priorities, race conditions, atomicity, visibility).
  */
 public class ConsoleApp {
     private final UserService userService;
@@ -43,7 +55,7 @@ public class ConsoleApp {
 
         while (running) {
             displayMainMenu();
-            System.out.print("Enter your choice (1-13): ");
+            System.out.print("Enter your choice (1-14): ");
 
             if (!scanner.hasNextLine()) {
                 System.out.println("\n[Console] No input stream detected. Exiting console session.");
@@ -55,7 +67,7 @@ public class ConsoleApp {
             try {
                 choice = Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.println("[Error] Invalid numeric input: '" + input + "'. Please enter a number between 1 and 13.\n");
+                System.out.println("[Error] Invalid numeric input: '" + input + "'. Please enter a number between 1 and 14.\n");
                 continue;
             }
 
@@ -97,11 +109,14 @@ public class ConsoleApp {
                     handleMilestone2Submenu();
                     break;
                 case 13:
+                    handleMultithreadingSubmenu();
+                    break;
+                case 14:
                     System.out.println("\n[Console] Thank you for using RentIQ. Goodbye!");
                     running = false;
                     break;
                 default:
-                    System.out.println("[Error] Invalid selection (" + choice + "). Please choose a valid option from 1 to 13.\n");
+                    System.out.println("[Error] Invalid selection (" + choice + "). Please choose a valid option from 1 to 14.\n");
                     break;
             }
         }
@@ -109,25 +124,269 @@ public class ConsoleApp {
 
     private void displayMainMenu() {
         System.out.println("\n----------------- RentIQ Main Menu -----------------");
-        System.out.println("1. Register User");
-        System.out.println("2. View Users");
-        System.out.println("3. View Vehicles");
-        System.out.println("4. Search Vehicles");
-        System.out.println("5. Book Vehicle");
-        System.out.println("6. View Bookings");
-        System.out.println("7. Cancel Booking");
-        System.out.println("8. View Recently Viewed Vehicles (LinkedList)");
-        System.out.println("9. View Unique Vehicle Categories (HashSet & LinkedHashSet)");
+        System.out.println("1.  Register User");
+        System.out.println("2.  View Users");
+        System.out.println("3.  View Vehicles");
+        System.out.println("4.  Search Vehicles");
+        System.out.println("5.  Book Vehicle");
+        System.out.println("6.  View Bookings");
+        System.out.println("7.  Cancel Booking");
+        System.out.println("8.  View Recently Viewed Vehicles (LinkedList)");
+        System.out.println("9.  View Unique Vehicle Categories (HashSet & LinkedHashSet)");
         System.out.println("10. View Sorted Vehicle Categories (TreeSet)");
         System.out.println("11. Run Complete Collections Framework Demonstration");
         System.out.println("12. Maps, Queues, Iterators & Sorting Submenu (Milestone 2)");
-        System.out.println("13. Exit");
+        System.out.println("13. Multithreading Demonstrations Submenu (Milestone 3)");
+        System.out.println("14. Exit");
         System.out.println("----------------------------------------------------");
     }
 
-    /**
-     * Milestone 2 Submenu exposing all Map, Queue, Iterator, and Sorting features.
-     */
+    // ==========================================================
+    // Milestone 3: Multithreading Submenu
+    // ==========================================================
+
+    private void handleMultithreadingSubmenu() {
+        boolean inSubmenu = true;
+        while (inSubmenu) {
+            System.out.println("\n======= Multithreading Demonstrations (Phase 2 - Milestone 3) =======");
+            System.out.println("1.  Thread creation using Thread (FleetMonitorThread)");
+            System.out.println("2.  Thread creation using Runnable (BookingNotificationTask)");
+            System.out.println("3.  start() vs run() Execution Demonstration");
+            System.out.println("4.  sleep() Demonstration (Simulated Delays & Interruption)");
+            System.out.println("5.  join() Demonstration (Waiting for Concurrent Tasks)");
+            System.out.println("6.  interrupt() Demonstration (Graceful Thread Termination)");
+            System.out.println("7.  Thread Lifecycle States (NEW, RUNNABLE, TIMED_WAITING, etc.)");
+            System.out.println("8.  Daemon Thread Demonstration (isDaemon & Lifecycle)");
+            System.out.println("9.  Thread Priority Demonstration (MIN, NORM, MAX)");
+            System.out.println("10. Concurrent Vehicle Booking Simulation (Synchronized)");
+            System.out.println("11. Race Condition vs Synchronized Booking (Side-by-Side Simulation)");
+            System.out.println("12. Atomicity & Visibility Demonstration (Unsafe vs Sync vs Atomic + Volatile)");
+            System.out.println("13. Return to Main Menu");
+            System.out.println("=====================================================================");
+            System.out.print("Enter your choice (1-13): ");
+
+            if (!scanner.hasNextLine()) {
+                break;
+            }
+
+            String input = scanner.nextLine().trim();
+            int subChoice = -1;
+            try {
+                subChoice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("[Error] Invalid numeric choice: '" + input + "'.\n");
+                continue;
+            }
+
+            switch (subChoice) {
+                case 1:
+                    handleThreadCreationViaThread();
+                    break;
+                case 2:
+                    handleThreadCreationViaRunnable();
+                    break;
+                case 3:
+                    StartVsRunDemo.runDemo();
+                    break;
+                case 4:
+                    handleSleepDemo();
+                    break;
+                case 5:
+                    handleJoinDemo();
+                    break;
+                case 6:
+                    handleInterruptDemo();
+                    break;
+                case 7:
+                    ThreadLifecycleDemo.runDemo();
+                    break;
+                case 8:
+                    handleDaemonDemo();
+                    break;
+                case 9:
+                    ThreadPriorityDemo.runDemo();
+                    break;
+                case 10:
+                    handleConcurrentBookingSimulation();
+                    break;
+                case 11:
+                    handleRaceConditionVsSyncDemo();
+                    break;
+                case 12:
+                    AtomicityVisibilityDemo.runDemo();
+                    break;
+                case 13:
+                    inSubmenu = false;
+                    break;
+                default:
+                    System.out.println("[Error] Invalid selection (" + subChoice + "). Enter a number between 1 and 13.\n");
+                    break;
+            }
+        }
+    }
+
+    private void handleThreadCreationViaThread() {
+        System.out.println("\n--- 1. Thread Creation: Extending Thread (FleetMonitorThread) ---");
+        FleetMonitorThread monitor = new FleetMonitorThread(vehicleService, 200);
+        System.out.println("Thread Name before setName(): " + monitor.getName());
+        monitor.setName("Custom-FleetMonitor-Worker");
+        System.out.println("Thread Name after setName() : " + monitor.getName());
+        System.out.println("Thread State before start() : " + monitor.getState());
+
+        monitor.start();
+        try {
+            Thread.sleep(450); // Let it run two audit cycles
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        monitor.stopMonitoring();
+        try {
+            monitor.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        System.out.println("Thread State after join()   : " + monitor.getState());
+        System.out.println("----------------------------------------------------------------\n");
+    }
+
+    private void handleThreadCreationViaRunnable() {
+        System.out.println("\n--- 2. Thread Creation: Implementing Runnable (BookingNotificationTask) ---");
+        Customer customer = (Customer) userService.findUserById("U1001");
+        Vehicle vehicle = vehicleService.searchVehicleById("V101");
+        if (customer != null && vehicle != null) {
+            Booking sampleBooking = new Booking("BK-NOTIF-99", customer, vehicle, 3);
+            BookingNotificationTask task = new BookingNotificationTask(sampleBooking, "EMAIL");
+
+            Thread notificationThread = new Thread(task, "Notification-Worker-Thread");
+            System.out.println("Created Thread with Runnable task: " + notificationThread.getName());
+            notificationThread.start();
+            try {
+                notificationThread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        } else {
+            System.out.println("[Error] Customer or vehicle sample data missing for notification task.");
+        }
+        System.out.println("---------------------------------------------------------------------------\n");
+    }
+
+    private void handleSleepDemo() {
+        System.out.println("\n--- 4. sleep() Demonstration with InterruptedException Handling ---");
+        System.out.println("Simulating a 300ms vehicle diagnostic check on calling thread...");
+        long start = System.currentTimeMillis();
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            System.out.println("[Interrupt] Sleep was interrupted!");
+            Thread.currentThread().interrupt();
+        }
+        long elapsed = System.currentTimeMillis() - start;
+        System.out.printf("Diagnostic check completed in %d ms.\n", elapsed);
+        System.out.println("--------------------------------------------------------------------\n");
+    }
+
+    private void handleJoinDemo() {
+        System.out.println("\n--- 5. join() Demonstration: Waiting for Concurrent Background Tasks ---");
+        System.out.println("Main thread spawning 3 asynchronous billing computation tasks...");
+        List<Thread> tasks = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+            final int taskId = i;
+            Thread t = new Thread(() -> {
+                System.out.printf("[%s] Calculating billing batch #%d...\n", Thread.currentThread().getName(), taskId);
+                try {
+                    Thread.sleep(150 * taskId);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                System.out.printf("[%s] Batch #%d finished.\n", Thread.currentThread().getName(), taskId);
+            }, "BillingTask-" + taskId);
+            tasks.add(t);
+            t.start();
+        }
+
+        System.out.println("[Main Thread] Calling join() on all 3 billing task threads...");
+        for (Thread t : tasks) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        System.out.println("[Main Thread] All billing tasks joined successfully. Displaying consolidated reports.");
+        System.out.println("------------------------------------------------------------------------\n");
+    }
+
+    private void handleInterruptDemo() {
+        System.out.println("\n--- 6. interrupt() Demonstration: Stopping Background Tasks Cleanly ---");
+        FleetMonitorThread stoppableThread = new FleetMonitorThread(vehicleService, 500);
+        stoppableThread.setName("Stoppable-Monitor-Thread");
+        stoppableThread.start();
+        try {
+            Thread.sleep(200);
+            System.out.println("[Main Thread] Sending interrupt signal to: " + stoppableThread.getName());
+            stoppableThread.interrupt(); // Signal interrupt
+            stoppableThread.join();      // Wait for clean termination
+            System.out.println("[Main Thread] Background monitor stopped cleanly without deprecated methods.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        System.out.println("------------------------------------------------------------------------\n");
+    }
+
+    private void handleDaemonDemo() {
+        System.out.println("\n--- 8. Daemon Thread Demonstration ---");
+        Thread daemonThread = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }, "Background-Daemon-Worker");
+
+        daemonThread.setDaemon(true); // Must be set before start()
+        System.out.println("Configured Daemon Status: " + daemonThread.isDaemon());
+        daemonThread.start();
+        System.out.println("Daemon thread started: " + daemonThread.getName() + " (isDaemon = " + daemonThread.isDaemon() + ")");
+        System.out.println("[Concept]: Daemon threads provide background support (e.g. GC, telemetry).");
+        System.out.println("           The JVM terminates immediately when all non-daemon user threads finish.");
+        daemonThread.interrupt(); // Cleanup
+        System.out.println("--------------------------------------\n");
+    }
+
+    private void handleConcurrentBookingSimulation() {
+        System.out.println("\n--- 10. Concurrent Vehicle Booking Simulation (Thread-Safe Synchronized) ---");
+        Customer customer1 = (Customer) userService.findUserById("U1001");
+        Customer customer2 = (Customer) userService.findUserById("U1002");
+        Vehicle target = vehicleService.searchVehicleById("V102");
+
+        if (customer1 != null && customer2 != null && target != null) {
+            RaceConditionDemo.demoSynchronizedBooking(bookingService, customer1, customer2, target);
+        } else {
+            System.out.println("[Error] Missing sample entities for concurrent booking simulation.");
+        }
+    }
+
+    private void handleRaceConditionVsSyncDemo() {
+        System.out.println("\n--- 11. Side-by-Side: Race Condition vs Synchronized Booking ---");
+        Customer customer1 = (Customer) userService.findUserById("U1001");
+        Customer customer2 = (Customer) userService.findUserById("U1002");
+        Vehicle target = vehicleService.searchVehicleById("V101");
+
+        if (customer1 != null && customer2 != null && target != null) {
+            RaceConditionDemo.demoUnsafeBooking(customer1, customer2, target);
+            RaceConditionDemo.demoSynchronizedBooking(bookingService, customer1, customer2, target);
+        } else {
+            System.out.println("[Error] Missing sample entities for race condition comparison.");
+        }
+    }
+
+    // ==========================================================
+    // Milestone 2 Submenu (Preserved)
+    // ==========================================================
+
     private void handleMilestone2Submenu() {
         boolean inSubmenu = true;
         while (inSubmenu) {
@@ -320,8 +579,8 @@ public class ConsoleApp {
 
     private void handleDemonstratePriorityQueue() {
         System.out.println("\n--- PriorityQueue Priority Processing Demonstration ---");
-        Customer vip = (Customer) userService.findUserById("U1001"); // VIP
-        Customer regular = (Customer) userService.findUserById("U1002"); // Standard
+        Customer vip = (Customer) userService.findUserById("U1001");
+        Customer regular = (Customer) userService.findUserById("U1002");
         Vehicle v1 = vehicleService.searchVehicleById("V102");
         Vehicle v2 = vehicleService.searchVehicleById("B201");
 
@@ -378,9 +637,9 @@ public class ConsoleApp {
         }
     }
 
-    // ==========================================
+    // ==========================================================
     // Phase 1 and Milestone 1 Handlers (Preserved)
-    // ==========================================
+    // ==========================================================
 
     private void handleRegisterUser() {
         System.out.println("\n--- 1. Register New Customer ---");

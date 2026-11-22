@@ -139,10 +139,12 @@ public class BookingService {
                 throw new InvalidBookingException("Booking Confirmation Failed: Unable to lock vehicle availability.");
             }
 
-            // Synchronize List, HashMap, and LinkedHashMap
-            bookings.add(booking);
-            bookingMap.put(key, booking);
-            bookingHistory.put(booking.getBookingId(), booking);
+            // Thread-safe update of service collections
+            synchronized (this) {
+                bookings.add(booking);
+                bookingMap.put(key, booking);
+                bookingHistory.put(booking.getBookingId(), booking);
+            }
 
             bookingAuditLog.append(System.currentTimeMillis())
                            .append(" - Confirmed Booking [")
@@ -161,6 +163,35 @@ public class BookingService {
         }
 
         return booking;
+    }
+
+    /**
+     * Thread-safe synchronized booking method protecting the critical section:
+     * 1. Checking vehicle availability.
+     * 2. Updating vehicle availability.
+     * 3. Creating and registering the confirmed booking in List, HashMap, and LinkedHashMap.
+     *
+     * Locks on the vehicle shared-resource monitor, ensuring that two concurrent threads
+     * targeting the same vehicle cannot cause a race condition or double booking.
+     */
+    public Booking bookVehicleSynchronized(Customer customer, Vehicle vehicle, int rentalDays)
+            throws InvalidBookingException, VehicleNotAvailableException {
+        if (vehicle == null) {
+            throw new InvalidBookingException("Booking Creation Failed: Vehicle reference cannot be null.");
+        }
+
+        // Synchronize on the target vehicle instance (resource-level lock)
+        synchronized (vehicle) {
+            if (!checkVehicleAvailability(vehicle)) {
+                throw new VehicleNotAvailableException(
+                    "Booking Conflict: Vehicle " + vehicle.getBrand() + " " + vehicle.getModel() +
+                    " [" + vehicle.getVehicleId() + "] is UNAVAILABLE (already booked by another customer).",
+                    vehicle.getVehicleId()
+                );
+            }
+            // Proceed to book within the protected critical section
+            return createBooking(customer, vehicle, rentalDays);
+        }
     }
 
     // Confirm booking
