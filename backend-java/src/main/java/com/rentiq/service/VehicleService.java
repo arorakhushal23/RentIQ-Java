@@ -5,6 +5,7 @@ import com.rentiq.model.Vehicle;
 /**
  * Service class for managing vehicle catalog and rental availability.
  * Implements vehicle management operations using standard arrays without Collections.
+ * Demonstrates String handling, search, case comparisons, and StringBuilder formatting.
  */
 public class VehicleService {
     private Vehicle[] vehicles;
@@ -27,7 +28,6 @@ public class VehicleService {
             return false;
         }
         if (vehicleCount >= vehicles.length) {
-            // Expand array capacity dynamically using standard array copying
             Vehicle[] expanded = new Vehicle[vehicles.length * 2];
             for (int i = 0; i < vehicles.length; i++) {
                 expanded[i] = vehicles[i];
@@ -40,7 +40,7 @@ public class VehicleService {
         return true;
     }
 
-    // 2. Display all vehicles (demonstrates runtime polymorphism)
+    // 2. Display all vehicles
     public void displayAllVehicles() {
         System.out.println("\n========== RentIQ Vehicle Fleet (" + vehicleCount + " vehicles) ==========");
         if (vehicleCount == 0) {
@@ -60,11 +60,69 @@ public class VehicleService {
             return null;
         }
         for (int i = 0; i < vehicleCount; i++) {
-            if (vehicles[i].getVehicleId().equalsIgnoreCase(vehicleId)) {
+            if (vehicles[i].getVehicleId().equalsIgnoreCase(vehicleId.trim())) {
                 return vehicles[i];
             }
         }
         return null;
+    }
+
+    /**
+     * Searches vehicles matching a keyword in brand, model, or category.
+     * Demonstrates String manipulation, case-insensitivity, and StringBuilder.
+     */
+    public int searchVehicles(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            System.out.println("[Search] Please provide a valid non-empty keyword.");
+            return 0;
+        }
+        String cleanKeyword = keyword.trim().toLowerCase();
+        StringBuilder results = new StringBuilder();
+        results.append("\n--- Search Results for '").append(keyword.trim()).append("' ---\n");
+
+        int matchCount = 0;
+        for (int i = 0; i < vehicleCount; i++) {
+            Vehicle v = vehicles[i];
+            boolean brandMatch = v.getBrand() != null && v.getBrand().toLowerCase().contains(cleanKeyword);
+            boolean modelMatch = v.getModel() != null && v.getModel().toLowerCase().contains(cleanKeyword);
+            boolean categoryMatch = v.getCategory() != null && v.getCategory().equalsIgnoreCase(keyword.trim());
+
+            if (brandMatch || modelMatch || categoryMatch) {
+                matchCount++;
+                results.append(String.format("Match #%d: [%s] %s %s (%s) - $%.2f/day - %s\n",
+                    matchCount, v.getVehicleId(), v.getBrand(), v.getModel(), v.getCategory(),
+                    v.getPricePerDay(), (v.isAvailable() ? "Available" : "Rented")));
+            }
+        }
+
+        if (matchCount == 0) {
+            results.append("No matching vehicles found for: '").append(keyword).append("'\n");
+        }
+        results.append("------------------------------------------------\n");
+        System.out.println(results.toString());
+        return matchCount;
+    }
+
+    /**
+     * Filters vehicles by category (e.g. "Car", "Bike").
+     * Demonstrates equalsIgnoreCase string comparison.
+     */
+    public int filterByCategory(String category) {
+        if (category == null || category.trim().isEmpty()) {
+            return 0;
+        }
+        System.out.println("\n--- Vehicles in Category: " + category.trim() + " ---");
+        int count = 0;
+        for (int i = 0; i < vehicleCount; i++) {
+            if (vehicles[i].getCategory() != null && vehicles[i].getCategory().equalsIgnoreCase(category.trim())) {
+                count++;
+                vehicles[i].displayVehicleDetails();
+            }
+        }
+        if (count == 0) {
+            System.out.println("No vehicles found in category '" + category + "'.");
+        }
+        return count;
     }
 
     // 4. Update vehicle availability
