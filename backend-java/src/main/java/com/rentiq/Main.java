@@ -11,34 +11,56 @@ import com.rentiq.service.BookingService;
 import com.rentiq.service.UserService;
 import com.rentiq.service.VehicleService;
 import com.rentiq.ui.console.ConsoleApp;
+import com.rentiq.util.CollectionDemo;
 import java.util.Scanner;
 
 /**
  * Main application class for RentIQ Vehicle Rental Management System.
- * Integrates all domain models, services, custom exceptions, String handling demonstrations,
- * Wrapper class usage, and Console UI.
+ * Integrates domain models, services backed by Java Collections Framework,
+ * custom exceptions, String handling demonstrations, Wrapper class usage,
+ * Collection demonstrations, and Console UI.
  */
 public class Main {
     public static void main(String[] args) {
         System.out.println("============================================================");
-        System.out.println("   RentIQ - Vehicle Rental System (Commit 4 Finalization)   ");
+        System.out.println("   RentIQ - Vehicle Rental System (Phase 2, Milestone 1)    ");
         System.out.println("============================================================\n");
 
-        // 1. Initialize Core Services
+        // 1. Initialize Core Services (powered by Java Collections)
         UserService userService = new UserService();
         VehicleService vehicleService = new VehicleService();
         BookingService bookingService = new BookingService();
 
         // 2. Pre-seed fleet vehicles
+        // Note: Adding 12 vehicles exceeds previous array capacity (10), verifying dynamic ArrayList growth
         Vehicle v1 = new Car("V101", "Tesla", "Model 3", "TS-01-EV", 85.0, true, 5, "Electric");
         Vehicle v2 = new Car("V102", "Toyota", "RAV4", "TY-02-SUV", 65.0, true, 5, "Hybrid");
         Vehicle v3 = new Bike("B201", "Yamaha", "YZF-R3", "YM-01-BK", 45.0, true, 321, true);
         Vehicle v4 = new Bike("B202", "Harley-Davidson", "Iron 883", "HD-02-BK", 75.0, true, 883, true);
+        Vehicle v5 = new Car("V103", "Honda", "Civic", "HN-03-SD", 55.0, true, 5, "Gasoline");
+        Vehicle v6 = new Car("V104", "BMW", "3 Series", "BM-04-SD", 95.0, true, 5, "Gasoline");
+        Vehicle v7 = new Bike("B203", "Kawasaki", "Ninja 400", "KW-03-BK", 50.0, true, 399, true);
+        Vehicle v8 = new Car("V105", "Ford", "Mustang Mach-E", "FD-05-EV", 90.0, true, 5, "Electric");
+        Vehicle v9 = new Car("V106", "Audi", "Q5", "AD-06-SUV", 80.0, true, 5, "Gasoline");
+        Vehicle v10 = new Bike("B204", "Ducati", "Scrambler", "DC-04-BK", 85.0, true, 803, true);
+        // Exceeding previous fixed-size capacity of 10:
+        Vehicle v11 = new Car("V107", "Mercedes-Benz", "C300", "MB-07-SD", 100.0, true, 5, "Gasoline");
+        Vehicle v12 = new Bike("B205", "Triumph", "Bonneville T100", "TR-05-BK", 70.0, true, 900, true);
 
         vehicleService.addVehicle(v1);
         vehicleService.addVehicle(v2);
         vehicleService.addVehicle(v3);
         vehicleService.addVehicle(v4);
+        vehicleService.addVehicle(v5);
+        vehicleService.addVehicle(v6);
+        vehicleService.addVehicle(v7);
+        vehicleService.addVehicle(v8);
+        vehicleService.addVehicle(v9);
+        vehicleService.addVehicle(v10);
+        vehicleService.addVehicle(v11);
+        vehicleService.addVehicle(v12);
+
+        System.out.println("[Fleet Setup] Successfully seeded " + vehicleService.getVehicleCount() + " vehicles into dynamic ArrayList fleet.");
 
         // Pre-seed sample users
         try {
@@ -50,20 +72,34 @@ public class Main {
         }
 
         // ------------------------------------------------------------
-        // SECTION A: Core Java String Handling & Wrapper Demonstrations
+        // SECTION A: Core Java String Handling & Wrapper Demonstrations (Phase 1 Preserved)
         // ------------------------------------------------------------
         demonstrateStringHandling();
         demonstrateWrapperClasses();
 
         // ------------------------------------------------------------
-        // SECTION B: Exception Handling Demonstration (Try-Catch-Finally)
+        // SECTION B: Exception Handling Demonstration (Phase 1 Preserved)
         // ------------------------------------------------------------
         demonstrateExceptionHandling(userService, vehicleService, bookingService);
 
         // ------------------------------------------------------------
-        // SECTION C: Console Interface Execution
+        // SECTION C: Java Collections Framework Showcase (Phase 2 Milestone 1)
         // ------------------------------------------------------------
-        // When running in an automated or piped environment, simulate complete console menu operations (1 through 8)
+        CollectionDemo.runAllDemos();
+
+        // Demonstrate Set & LinkedList behaviors with current fleet
+        System.out.println(">>> Dynamic Vehicle Fleet Category Analysis (Set Implementations):");
+        vehicleService.displayCategoryOverview();
+
+        // Simulate viewing vehicles to populate LinkedList (Recently Viewed)
+        vehicleService.displayVehicleDetails("V101");
+        vehicleService.displayVehicleDetails("B201");
+        vehicleService.displayVehicleDetails("V102");
+        vehicleService.displayRecentlyViewedVehicles();
+
+        // ------------------------------------------------------------
+        // SECTION D: Console Interface Execution (Automated Simulation)
+        // ------------------------------------------------------------
         System.out.println("\n>>> Launching Console Application Demonstration <<<");
         String simulatedConsoleInput =
             "1\n" +                                   // 1. Register User
@@ -77,6 +113,7 @@ public class Main {
             "3\n" +                                   // 3. View Vehicles
             "4\n" +                                   // 4. Search Vehicles
             "Tesla\n" +                               // Keyword
+            "V101\n" +                                // View details & add to recently viewed
             "5\n" +                                   // 5. Book Vehicle
             "U1001\n" +                               // Alice User ID
             "V101\n" +                                // Tesla Model 3
@@ -84,17 +121,21 @@ public class Main {
             "6\n" +                                   // 6. View Bookings
             "7\n" +                                   // 7. Cancel Booking
             "BK-1001\n" +                             // Booking ID
-            "6\n" +                                   // View Bookings again
+            "8\n" +                                   // 8. View Recently Viewed Vehicles (LinkedList)
+            "\n" +                                    // Skip removing by ID
+            "9\n" +                                   // 9. View Unique Categories (HashSet & LinkedHashSet)
+            "10\n" +                                  // 10. View Sorted Categories (TreeSet)
+            "11\n" +                                  // 11. Run Collections Demo
             "99\n" +                                  // Invalid menu selection test
             "abc\n" +                                 // Invalid numeric input test
-            "8\n";                                    // 8. Exit
+            "12\n";                                   // 12. Exit
 
         Scanner consoleScanner = new Scanner(simulatedConsoleInput);
         ConsoleApp consoleApp = new ConsoleApp(userService, vehicleService, bookingService, consoleScanner);
         consoleApp.start();
 
         System.out.println("\n============================================================");
-        System.out.println("   RentIQ Phase 1 Commit 4 Completed Successfully!          ");
+        System.out.println("   RentIQ Phase 2 Milestone 1 Completed Successfully!       ");
         System.out.println("============================================================");
     }
 
@@ -151,17 +192,17 @@ public class Main {
         System.out.println("Parsed boolean from '" + flagStr + "' : " + parsedFlag);
 
         // 2. Autoboxing: Primitive to Wrapper Object
-        Integer boxedDays = parsedDays;     // Autoboxing
-        Double boxedRate = parsedRate;      // Autoboxing
-        Boolean boxedFlag = parsedFlag;     // Autoboxing
+        Integer boxedDays = parsedDays;
+        Double boxedRate = parsedRate;
+        Boolean boxedFlag = parsedFlag;
 
         System.out.println("Boxed Integer object        : " + boxedDays.getClass().getName() + " -> " + boxedDays);
         System.out.println("Boxed Double object         : " + boxedRate.getClass().getName() + " -> " + boxedRate);
         System.out.println("Boxed Boolean object        : " + boxedFlag.getClass().getName() + " -> " + boxedFlag);
 
         // 3. Unboxing: Wrapper Object to Primitive
-        int unboxedDays = boxedDays;        // Unboxing
-        double unboxedRate = boxedRate;     // Unboxing
+        int unboxedDays = boxedDays;
+        double unboxedRate = boxedRate;
         double calculatedTotal = unboxedDays * unboxedRate;
         System.out.println("Calculated Total via unbox  : $" + String.format("%.2f", calculatedTotal));
     }

@@ -10,12 +10,13 @@ import com.rentiq.model.Vehicle;
 import com.rentiq.service.BookingService;
 import com.rentiq.service.UserService;
 import com.rentiq.service.VehicleService;
+import com.rentiq.util.CollectionDemo;
 import java.util.Scanner;
 
 /**
  * Console interface for the RentIQ Vehicle Rental Management System.
- * Implements an 8-option interactive menu, user input validation, Scanner handling,
- * and error recovery using custom exceptions.
+ * Implements interactive menu options, user input validation, Scanner handling,
+ * error recovery, and demonstrates Collections (ArrayList, LinkedList, HashSet, LinkedHashSet, TreeSet).
  */
 public class ConsoleApp {
     private final UserService userService;
@@ -41,7 +42,7 @@ public class ConsoleApp {
 
         while (running) {
             displayMenu();
-            System.out.print("Enter your choice (1-8): ");
+            System.out.print("Enter your choice (1-12): ");
 
             if (!scanner.hasNextLine()) {
                 System.out.println("\n[Console] No input stream detected. Exiting console session.");
@@ -50,12 +51,11 @@ public class ConsoleApp {
 
             String input = scanner.nextLine().trim();
 
-            // Demonstrate wrapper class parsing and NumberFormatException handling
             int choice = -1;
             try {
                 choice = Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.println("[Error] Invalid numeric input: '" + input + "'. Please enter a number between 1 and 8.\n");
+                System.out.println("[Error] Invalid numeric input: '" + input + "'. Please enter a number between 1 and 12.\n");
                 continue;
             }
 
@@ -82,11 +82,23 @@ public class ConsoleApp {
                     handleCancelBooking();
                     break;
                 case 8:
+                    handleRecentlyViewedVehicles();
+                    break;
+                case 9:
+                    handleUniqueCategories();
+                    break;
+                case 10:
+                    handleSortedCategories();
+                    break;
+                case 11:
+                    handleCollectionsDemo();
+                    break;
+                case 12:
                     System.out.println("\n[Console] Thank you for using RentIQ. Goodbye!");
                     running = false;
                     break;
                 default:
-                    System.out.println("[Error] Invalid selection (" + choice + "). Please choose a valid option from 1 to 8.\n");
+                    System.out.println("[Error] Invalid selection (" + choice + "). Please choose a valid option from 1 to 12.\n");
                     break;
             }
         }
@@ -101,7 +113,11 @@ public class ConsoleApp {
         System.out.println("5. Book Vehicle");
         System.out.println("6. View Bookings");
         System.out.println("7. Cancel Booking");
-        System.out.println("8. Exit");
+        System.out.println("8. View Recently Viewed Vehicles (LinkedList)");
+        System.out.println("9. View Unique Vehicle Categories (HashSet & LinkedHashSet)");
+        System.out.println("10. View Sorted Vehicle Categories (TreeSet)");
+        System.out.println("11. Run Collections Framework Demonstration");
+        System.out.println("12. Exit");
         System.out.println("----------------------------------------------------");
     }
 
@@ -147,7 +163,14 @@ public class ConsoleApp {
         System.out.println("\n--- 4. Search Vehicles ---");
         System.out.print("Enter search keyword (Brand, Model, or Category): ");
         String keyword = readLine();
-        vehicleService.searchVehicles(keyword);
+        int matches = vehicleService.searchVehicles(keyword);
+        if (matches > 0) {
+            System.out.print("Enter Vehicle ID to view details & add to recently viewed (or press Enter to skip): ");
+            String vId = readLine();
+            if (!vId.isEmpty()) {
+                vehicleService.displayVehicleDetails(vId);
+            }
+        }
     }
 
     private void handleBookVehicle() {
@@ -174,13 +197,11 @@ public class ConsoleApp {
             String durationInput = readLine();
             int days;
             try {
-                // Wrapper class parsing
                 days = Integer.parseInt(durationInput.trim());
             } catch (NumberFormatException e) {
                 throw new InvalidBookingException("Invalid duration: '" + durationInput + "' is not a valid integer.");
             }
 
-            // Execute booking through service
             Booking booking = bookingService.createBooking((Customer) user, vehicle, days);
             if (booking != null) {
                 System.out.println("\n>>> Booking Confirmation <<<");
@@ -210,6 +231,37 @@ public class ConsoleApp {
         } catch (InvalidBookingException e) {
             System.out.println("[Cancellation Error] " + e.getMessage());
         }
+    }
+
+    private void handleRecentlyViewedVehicles() {
+        System.out.println("\n--- 8. Recently Viewed Vehicles (LinkedList) ---");
+        vehicleService.displayRecentlyViewedVehicles();
+        System.out.print("Enter Vehicle ID to remove from recently viewed (or press Enter to skip): ");
+        String vId = readLine();
+        if (!vId.isEmpty()) {
+            boolean removed = vehicleService.removeRecentlyViewed(vId);
+            if (removed) {
+                System.out.println("[LinkedList] Successfully removed vehicle '" + vId + "' from recently viewed.");
+            } else {
+                System.out.println("[LinkedList] Vehicle '" + vId + "' was not found in recently viewed list.");
+            }
+        }
+    }
+
+    private void handleUniqueCategories() {
+        System.out.println("\n--- 9. Unique Vehicle Categories ---");
+        System.out.println("HashSet (Constant-Time O(1) Unique Set): " + vehicleService.getCategoryHashSet());
+        System.out.println("LinkedHashSet (Unique & Preserving Insertion Sequence): " + vehicleService.getCategoryLinkedHashSet());
+    }
+
+    private void handleSortedCategories() {
+        System.out.println("\n--- 10. Sorted Vehicle Categories (TreeSet) ---");
+        System.out.println("TreeSet (Unique & Natural Alphabetical Order): " + vehicleService.getCategoryTreeSet());
+    }
+
+    private void handleCollectionsDemo() {
+        System.out.println("\n--- 11. Running Collections Framework Showcase ---");
+        CollectionDemo.runAllDemos();
     }
 
     private String readLine() {

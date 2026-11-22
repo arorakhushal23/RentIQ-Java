@@ -4,27 +4,29 @@ import com.rentiq.exception.InvalidUserException;
 import com.rentiq.model.Admin;
 import com.rentiq.model.Customer;
 import com.rentiq.model.User;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
- * Service managing user registration and queries using standard arrays.
- * Demonstrates String handling, validation, custom exceptions, StringBuilder, and StringBuffer.
+ * Service managing user registration and queries using Java Collections (ArrayList).
+ * Demonstrates String handling, validation, custom exceptions, StringBuilder,
+ * StringBuffer, and dynamic collection storage without fixed array limits.
  */
 public class UserService {
-    private User[] users;
-    private int userCount;
+    private List<User> users;
     private static int userCounter = 1000;
-    private static final int DEFAULT_CAPACITY = 10;
 
     // StringBuffer demonstrating mutable thread-safe string buffer for audit history
     private StringBuffer auditLog;
 
     public UserService() {
-        this(DEFAULT_CAPACITY);
+        this.users = new ArrayList<>();
+        this.auditLog = new StringBuffer("=== User Service Audit Log ===\n");
     }
 
-    public UserService(int capacity) {
-        this.users = new User[capacity];
-        this.userCount = 0;
+    public UserService(int initialCapacity) {
+        this.users = new ArrayList<>(initialCapacity);
         this.auditLog = new StringBuffer("=== User Service Audit Log ===\n");
     }
 
@@ -66,7 +68,7 @@ public class UserService {
         Customer customer = new Customer(userId, name.trim(), email.trim(), password, phone.trim(),
                                          drivingLicense.trim(), (membershipLevel != null && !membershipLevel.trim().isEmpty()) ? membershipLevel.trim() : "Standard");
 
-        addUserToArray(customer);
+        users.add(customer);
 
         // Demonstrate StringBuilder for constructing formatted message
         StringBuilder sb = new StringBuilder();
@@ -94,7 +96,7 @@ public class UserService {
                                 (department != null ? department.trim() : "General"),
                                 (adminRole != null ? adminRole.trim() : "Staff"));
 
-        addUserToArray(admin);
+        users.add(admin);
         auditLog.append(System.currentTimeMillis()).append(" - Registered Admin: ").append(userId).append("\n");
         return admin;
     }
@@ -106,9 +108,10 @@ public class UserService {
         if (userId == null || userId.trim().isEmpty()) {
             return null;
         }
-        for (int i = 0; i < userCount; i++) {
-            if (users[i].getUserId().equalsIgnoreCase(userId.trim())) {
-                return users[i];
+        String cleanId = userId.trim();
+        for (User user : users) {
+            if (user.getUserId().equalsIgnoreCase(cleanId)) {
+                return user;
             }
         }
         return null;
@@ -118,32 +121,24 @@ public class UserService {
      * Displays all users using StringBuilder.
      */
     public void displayAllUsers() {
-        System.out.println("\n============== Registered RentIQ Users (" + userCount + ") ==============");
-        if (userCount == 0) {
+        System.out.println("\n============== Registered RentIQ Users (" + users.size() + ") ==============");
+        if (users.isEmpty()) {
             System.out.println("No users currently registered.");
             System.out.println("============================================================\n");
             return;
         }
-        for (int i = 0; i < userCount; i++) {
-            users[i].displayUserInfo();
+        for (User user : users) {
+            user.displayUserInfo();
         }
         System.out.println("============================================================\n");
     }
 
-    private void addUserToArray(User user) {
-        if (userCount >= users.length) {
-            User[] expanded = new User[users.length * 2];
-            for (int i = 0; i < users.length; i++) {
-                expanded[i] = users[i];
-            }
-            users = expanded;
-        }
-        users[userCount] = user;
-        userCount++;
+    public int getUserCount() {
+        return this.users.size();
     }
 
-    public int getUserCount() {
-        return this.userCount;
+    public List<User> getAllUsers() {
+        return Collections.unmodifiableList(this.users);
     }
 
     public String getAuditLog() {

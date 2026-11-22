@@ -5,29 +5,31 @@ import com.rentiq.exception.VehicleNotAvailableException;
 import com.rentiq.model.Booking;
 import com.rentiq.model.Customer;
 import com.rentiq.model.Vehicle;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Service class for handling vehicle booking operations in the RentIQ system.
- * Uses standard arrays for storing bookings without Collections.
+ * Uses ArrayList for storing dynamic bookings without fixed-size array constraints.
  * Demonstrates Wrapper classes (Integer, Double, Boolean), autoboxing, unboxing,
  * custom exceptions (VehicleNotAvailableException, InvalidBookingException),
  * and thread-safe StringBuffer for audit logging.
  */
 public class BookingService {
-    private Booking[] bookings;
-    private int bookingCount;
-    private static final int INITIAL_CAPACITY = 10;
+    // Dynamic booking storage using ArrayList
+    private List<Booking> bookings;
 
     // StringBuffer demonstrating mutable thread-safe audit logging
     private StringBuffer bookingAuditLog;
 
     public BookingService() {
-        this(INITIAL_CAPACITY);
+        this.bookings = new ArrayList<>();
+        this.bookingAuditLog = new StringBuffer("=== Booking Service Audit Log ===\n");
     }
 
-    public BookingService(int capacity) {
-        this.bookings = new Booking[capacity];
-        this.bookingCount = 0;
+    public BookingService(int initialCapacity) {
+        this.bookings = new ArrayList<>(initialCapacity);
         this.bookingAuditLog = new StringBuffer("=== Booking Service Audit Log ===\n");
     }
 
@@ -107,8 +109,8 @@ public class BookingService {
                 throw new InvalidBookingException("Booking Confirmation Failed: Unable to lock vehicle availability.");
             }
 
-            // Store in array
-            addBookingToArray(booking);
+            // Store in dynamic ArrayList
+            bookings.add(booking);
 
             // StringBuffer thread-safe logging
             bookingAuditLog.append(System.currentTimeMillis())
@@ -193,45 +195,38 @@ public class BookingService {
 
     // Display all bookings
     public void displayAllBookings() {
-        System.out.println("\n============== System Bookings Registry (" + bookingCount + ") ==============");
-        if (bookingCount == 0) {
+        System.out.println("\n============== System Bookings Registry (" + bookings.size() + ") ==============");
+        if (bookings.isEmpty()) {
             System.out.println("No bookings recorded in the system.");
             System.out.println("============================================================\n");
             return;
         }
-        for (int i = 0; i < bookingCount; i++) {
-            bookings[i].displayBookingDetails();
+        for (Booking booking : bookings) {
+            booking.displayBookingDetails();
         }
         System.out.println("============================================================\n");
     }
 
-    // Search booking by ID using linear search across array
+    // Search booking by ID
     public Booking searchBookingById(String bookingId) {
         if (bookingId == null || bookingId.trim().isEmpty()) {
             return null;
         }
-        for (int i = 0; i < bookingCount; i++) {
-            if (bookings[i].getBookingId().equalsIgnoreCase(bookingId.trim())) {
-                return bookings[i];
+        String cleanId = bookingId.trim();
+        for (Booking booking : bookings) {
+            if (booking.getBookingId().equalsIgnoreCase(cleanId)) {
+                return booking;
             }
         }
         return null;
     }
 
-    private void addBookingToArray(Booking booking) {
-        if (bookingCount >= bookings.length) {
-            Booking[] expanded = new Booking[bookings.length * 2];
-            for (int i = 0; i < bookings.length; i++) {
-                expanded[i] = bookings[i];
-            }
-            bookings = expanded;
-        }
-        bookings[bookingCount] = booking;
-        bookingCount++;
+    public int getBookingCount() {
+        return this.bookings.size();
     }
 
-    public int getBookingCount() {
-        return this.bookingCount;
+    public List<Booking> getAllBookings() {
+        return Collections.unmodifiableList(this.bookings);
     }
 
     public String getAuditLog() {
