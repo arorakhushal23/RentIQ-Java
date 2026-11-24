@@ -20,7 +20,12 @@
     </properties>
 
     <dependencies>
-        <!-- Intentionally dependency-free for now per project requirements -->
+        <!-- MySQL Connector/J JDBC Driver -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.4.0</version>
+        </dependency>
     </dependencies>
 
     <build>

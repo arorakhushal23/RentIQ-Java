@@ -1,5 +1,8 @@
 package com.rentiq.ui.console;
 
+import com.rentiq.config.DatabaseConfig;
+import com.rentiq.database.DatabaseConnection;
+import com.rentiq.database.DatabaseConnectionTest;
 import com.rentiq.concurrency.AtomicityVisibilityDemo;
 import com.rentiq.concurrency.BookingConsumer;
 import com.rentiq.concurrency.BookingNotificationTask;
@@ -33,13 +36,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Console interface for the RentIQ Vehicle Rental Management System.
- * Fully integrates Phase 1, Phase 2 Milestone 1, Milestone 2, Milestone 3, and Milestone 4:
+ * Fully integrates Phase 1, Phase 2 Milestone 1, Milestone 2, Milestone 3, and
+ * Milestone 4:
  * - Main menu with core rental operations and collections.
  * - Milestone 2 Submenu (Maps, Queues, Iterators, Sorting).
- * - Milestone 3 Submenu (Multithreading Fundamentals: Thread, Runnable, start vs run, sleep,
- *   join, interrupt, lifecycle states, daemon threads, priorities, race conditions, atomicity, visibility).
- * - Milestone 4 Submenu (Thread Coordination: wait, notify, notifyAll, guarded blocks,
- *   Producer-Consumer bounded buffer, and graceful shutdown).
+ * - Milestone 3 Submenu (Multithreading Fundamentals: Thread, Runnable, start
+ * vs run, sleep,
+ * join, interrupt, lifecycle states, daemon threads, priorities, race
+ * conditions, atomicity, visibility).
+ * - Milestone 4 Submenu (Thread Coordination: wait, notify, notifyAll, guarded
+ * blocks,
+ * Producer-Consumer bounded buffer, and graceful shutdown).
  */
 public class ConsoleApp {
     private final UserService userService;
@@ -47,7 +54,8 @@ public class ConsoleApp {
     private final BookingService bookingService;
     private final Scanner scanner;
 
-    public ConsoleApp(UserService userService, VehicleService vehicleService, BookingService bookingService, Scanner scanner) {
+    public ConsoleApp(UserService userService, VehicleService vehicleService, BookingService bookingService,
+            Scanner scanner) {
         this.userService = userService;
         this.vehicleService = vehicleService;
         this.bookingService = bookingService;
@@ -65,7 +73,7 @@ public class ConsoleApp {
 
         while (running) {
             displayMainMenu();
-            System.out.print("Enter your choice (1-15): ");
+            System.out.print("Enter your choice (1-16): ");
 
             if (!scanner.hasNextLine()) {
                 System.out.println("\n[Console] No input stream detected. Exiting console session.");
@@ -77,7 +85,8 @@ public class ConsoleApp {
             try {
                 choice = Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.println("[Error] Invalid numeric input: '" + input + "'. Please enter a number between 1 and 15.\n");
+                System.out.println(
+                        "[Error] Invalid numeric input: '" + input + "'. Please enter a number between 1 and 16.\n");
                 continue;
             }
 
@@ -125,11 +134,15 @@ public class ConsoleApp {
                     handleThreadCoordinationSubmenu();
                     break;
                 case 15:
+                    handleDatabaseConnectivitySubmenu();
+                    break;
+                case 16:
                     System.out.println("\n[Console] Thank you for using RentIQ. Goodbye!");
                     running = false;
                     break;
                 default:
-                    System.out.println("[Error] Invalid selection (" + choice + "). Please choose a valid option from 1 to 15.\n");
+                    System.out.println(
+                            "[Error] Invalid selection (" + choice + "). Please choose a valid option from 1 to 16.\n");
                     break;
             }
         }
@@ -151,7 +164,8 @@ public class ConsoleApp {
         System.out.println("12. Maps, Queues, Iterators & Sorting Submenu (Milestone 2)");
         System.out.println("13. Multithreading Demonstrations Submenu (Milestone 3)");
         System.out.println("14. Thread Coordination Demonstrations Submenu (Milestone 4)");
-        System.out.println("15. Exit");
+        System.out.println("15. Database Connectivity Submenu (Phase 3 - Milestones 1 & 2)");
+        System.out.println("16. Exit");
         System.out.println("----------------------------------------------------");
     }
 
@@ -233,7 +247,8 @@ public class ConsoleApp {
                     inSubmenu = false;
                     break;
                 default:
-                    System.out.println("[Error] Invalid selection (" + subChoice + "). Enter a number between 1 and 13.\n");
+                    System.out.println(
+                            "[Error] Invalid selection (" + subChoice + "). Enter a number between 1 and 13.\n");
                     break;
             }
         }
@@ -340,7 +355,7 @@ public class ConsoleApp {
             Thread.sleep(200);
             System.out.println("[Main Thread] Sending interrupt signal to: " + stoppableThread.getName());
             stoppableThread.interrupt(); // Signal interrupt
-            stoppableThread.join();      // Wait for clean termination
+            stoppableThread.join(); // Wait for clean termination
             System.out.println("[Main Thread] Background monitor stopped cleanly without deprecated methods.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -363,7 +378,8 @@ public class ConsoleApp {
         daemonThread.setDaemon(true); // Must be set before start()
         System.out.println("Configured Daemon Status: " + daemonThread.isDaemon());
         daemonThread.start();
-        System.out.println("Daemon thread started: " + daemonThread.getName() + " (isDaemon = " + daemonThread.isDaemon() + ")");
+        System.out.println(
+                "Daemon thread started: " + daemonThread.getName() + " (isDaemon = " + daemonThread.isDaemon() + ")");
         System.out.println("[Concept]: Daemon threads provide background support (e.g. GC, telemetry).");
         System.out.println("           The JVM terminates immediately when all non-daemon user threads finish.");
         daemonThread.interrupt(); // Cleanup
@@ -455,7 +471,8 @@ public class ConsoleApp {
                     inSubmenu = false;
                     break;
                 default:
-                    System.out.println("[Error] Invalid selection (" + subChoice + "). Enter a number between 1 and 8.\n");
+                    System.out.println(
+                            "[Error] Invalid selection (" + subChoice + "). Enter a number between 1 and 8.\n");
                     break;
             }
         }
@@ -464,11 +481,13 @@ public class ConsoleApp {
     private void handleWaitDemo() {
         System.out.println("\n--- 1. wait() Demonstration: Atomic Lock Release & State Transition ---");
         System.out.println("A calling thread must hold the object's monitor lock before invoking wait().");
-        System.out.println("Upon invoking wait(), the thread ATOMICALLY releases the monitor and enters the WAITING state.");
+        System.out.println(
+                "Upon invoking wait(), the thread ATOMICALLY releases the monitor and enters the WAITING state.");
         Customer customer = (Customer) userService.findUserById("U1001");
         Vehicle vehicle = vehicleService.searchVehicleById("V101");
         if (customer == null || vehicle == null) {
-            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123", "Standard");
+            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123",
+                    "Standard");
             vehicle = vehicleService.getAllVehicles().get(0);
         }
         WaitNotifyDemo.runDemo(customer, vehicle);
@@ -476,12 +495,15 @@ public class ConsoleApp {
 
     private void handleNotifyDemo() {
         System.out.println("\n--- 2. notify() Demonstration: Waking a Single Waiting Thread ---");
-        System.out.println("A calling thread holding the monitor lock calls notify() to wake an arbitrary waiting thread.");
-        System.out.println("Important: The awakened thread does NOT resume execution immediately; it must wait until the signaling thread exits its synchronized block.");
+        System.out.println(
+                "A calling thread holding the monitor lock calls notify() to wake an arbitrary waiting thread.");
+        System.out.println(
+                "Important: The awakened thread does NOT resume execution immediately; it must wait until the signaling thread exits its synchronized block.");
         Customer customer = (Customer) userService.findUserById("U1001");
         Vehicle vehicle = vehicleService.searchVehicleById("V102");
         if (customer == null || vehicle == null) {
-            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123", "Standard");
+            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123",
+                    "Standard");
             vehicle = vehicleService.getAllVehicles().get(0);
         }
         WaitNotifyDemo.runDemo(customer, vehicle);
@@ -493,7 +515,8 @@ public class ConsoleApp {
         Vehicle v1 = vehicleService.searchVehicleById("V101");
         Vehicle v2 = vehicleService.searchVehicleById("V102");
         if (customer == null || v1 == null || v2 == null) {
-            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123", "Standard");
+            customer = new Customer("U1001", "Alice Johnson", "alice@example.com", "+1-555-0101", "pass", "DL-123",
+                    "Standard");
             v1 = vehicleService.getAllVehicles().get(0);
             v2 = vehicleService.getAllVehicles().get(1);
         }
@@ -510,16 +533,20 @@ public class ConsoleApp {
         Customer c1 = (Customer) userService.findUserById("U1001");
         Customer c2 = (Customer) userService.findUserById("U1002");
         Customer c3 = (Customer) userService.findUserById("U1003");
-        if (c1 == null) c1 = new Customer("U1001", "Alice", "a@test.com", "123", "pass", "DL1", "Gold");
-        if (c2 == null) c2 = new Customer("U1002", "Bob", "b@test.com", "456", "pass", "DL2", "Standard");
-        if (c3 == null) c3 = new Customer("U1003", "Elena", "e@test.com", "789", "pass", "DL3", "VIP");
+        if (c1 == null)
+            c1 = new Customer("U1001", "Alice", "a@test.com", "123", "pass", "DL1", "Gold");
+        if (c2 == null)
+            c2 = new Customer("U1002", "Bob", "b@test.com", "456", "pass", "DL2", "Standard");
+        if (c3 == null)
+            c3 = new Customer("U1003", "Elena", "e@test.com", "789", "pass", "DL3", "VIP");
         ProducerConsumerDemo.runSimulation(bookingService, vehicleService, c1, c2, c3);
     }
 
     private void handleIntegratedBookingProcessing() {
         System.out.println("\n--- 6. Integrated RentIQ Booking Request Processing ---");
         Customer customer = (Customer) userService.findUserById("U1001");
-        if (customer == null) customer = new Customer("U1001", "Alice", "a@test.com", "123", "pass", "DL1", "Gold");
+        if (customer == null)
+            customer = new Customer("U1001", "Alice", "a@test.com", "123", "pass", "DL1", "Gold");
         List<Vehicle> fleet = vehicleService.getAllVehicles();
         if (fleet.size() < 2) {
             System.out.println("[Error] Insufficient fleet vehicles.");
@@ -557,8 +584,10 @@ public class ConsoleApp {
         System.out.println("Demonstrating how buffer.shutdown() unblocks waiting consumer threads cleanly.");
         BookingRequestBuffer buffer = new BookingRequestBuffer(3);
         AtomicInteger processed = new AtomicInteger(0);
-        Thread c1 = new Thread(new BookingConsumer(buffer, bookingService, "ShutdownWorker-1", processed), "ShutdownWorker-1");
-        Thread c2 = new Thread(new BookingConsumer(buffer, bookingService, "ShutdownWorker-2", processed), "ShutdownWorker-2");
+        Thread c1 = new Thread(new BookingConsumer(buffer, bookingService, "ShutdownWorker-1", processed),
+                "ShutdownWorker-1");
+        Thread c2 = new Thread(new BookingConsumer(buffer, bookingService, "ShutdownWorker-2", processed),
+                "ShutdownWorker-2");
         c1.start();
         c2.start();
 
@@ -576,6 +605,84 @@ public class ConsoleApp {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    // ==========================================================
+    // Phase 3 - Milestones 1 & 2: Database Connectivity Submenu
+    // ==========================================================
+
+    private void handleDatabaseConnectivitySubmenu() {
+        boolean inSubmenu = true;
+        while (inSubmenu) {
+            System.out.println("\n======= Database Connectivity Submenu (Phase 3 - Milestones 1 & 2) =======");
+            System.out.println("1. Test MySQL Connection (Ping & Diagnostics)");
+            System.out.println("2. Display Database Connection Status & Configuration");
+            System.out.println("3. Execute Simple Database Verification Query");
+            System.out.println("4. Return to Main Menu");
+            System.out.println("==========================================================================");
+            System.out.print("Enter your choice (1-4): ");
+
+            if (!scanner.hasNextLine()) {
+                break;
+            }
+
+            String input = scanner.nextLine().trim();
+            int subChoice = -1;
+            try {
+                subChoice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("[Error] Invalid numeric choice: '" + input + "'.\n");
+                continue;
+            }
+
+            switch (subChoice) {
+                case 1:
+                    DatabaseConnectionTest.runConnectionTest();
+                    break;
+                case 2:
+                    handleDisplayDatabaseStatus();
+                    break;
+                case 3:
+                    handleExecuteVerificationQuery();
+                    break;
+                case 4:
+                    inSubmenu = false;
+                    break;
+                default:
+                    System.out.println("[Error] Invalid selection (" + subChoice + "). Enter a number between 1 and 4.\n");
+                    break;
+            }
+        }
+    }
+
+    private void handleDisplayDatabaseStatus() {
+        System.out.println("\n--- Database Connection Status & Configuration ---");
+        DatabaseConfig config = DatabaseConnection.getDefaultConfig();
+        config.displayConfig();
+
+        System.out.println("Probing live connection to MySQL server...");
+        DatabaseConnection.ConnectionResult result = DatabaseConnection.testConnection();
+        if (result.isSuccess()) {
+            System.out.println("[Status] ONLINE / HEALTHY");
+            System.out.println("  Message        : " + result.getMessage());
+            System.out.println("  Database Name  : " + result.getDatabaseName());
+            System.out.println("  Server Version : " + result.getServerVersion());
+            System.out.println("  Response Time  : " + result.getResponseTimeMs() + " ms");
+        } else {
+            System.out.println("[Status] OFFLINE / UNREACHABLE");
+            System.out.println("  Diagnostic     : " + result.getMessage());
+            System.out.println("  Note           : In-memory services continue to function normally without MySQL.");
+        }
+    }
+
+    private void handleExecuteVerificationQuery() {
+        System.out.println("\n--- Execute Verification Query ---");
+        System.out.println("Enter a SELECT query (or press Enter for default: 'SELECT vehicle_id, name, brand, model, price_per_day, availability_status FROM vehicles LIMIT 5'):");
+        String sql = readLine();
+        if (sql.isEmpty()) {
+            sql = "SELECT vehicle_id, name, brand, model, price_per_day, availability_status FROM vehicles LIMIT 5";
+        }
+        DatabaseConnectionTest.executeVerificationQuery(sql);
     }
 
     // ==========================================================
@@ -660,7 +767,8 @@ public class ConsoleApp {
                     inSubmenu = false;
                     break;
                 default:
-                    System.out.println("[Error] Invalid option (" + subChoice + "). Enter a number between 1 and 14.\n");
+                    System.out
+                            .println("[Error] Invalid option (" + subChoice + "). Enter a number between 1 and 14.\n");
                     break;
             }
         }
@@ -832,10 +940,6 @@ public class ConsoleApp {
         }
     }
 
-    // ==========================================================
-    // Phase 1 and Milestone 1 Handlers (Preserved)
-    // ==========================================================
-
     private void handleRegisterUser() {
         System.out.println("\n--- 1. Register New Customer ---");
         try {
@@ -966,7 +1070,8 @@ public class ConsoleApp {
     private void handleUniqueCategories() {
         System.out.println("\n--- 9. Unique Vehicle Categories ---");
         System.out.println("HashSet (Constant-Time O(1) Unique Set): " + vehicleService.getCategoryHashSet());
-        System.out.println("LinkedHashSet (Unique & Preserving Insertion Sequence): " + vehicleService.getCategoryLinkedHashSet());
+        System.out.println(
+                "LinkedHashSet (Unique & Preserving Insertion Sequence): " + vehicleService.getCategoryLinkedHashSet());
     }
 
     private void handleSortedCategories() {

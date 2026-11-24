@@ -24,3 +24,9 @@ replay_pid*
 .settings/
 .project
 .classpath
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+

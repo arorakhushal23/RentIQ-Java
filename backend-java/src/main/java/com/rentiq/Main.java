@@ -27,6 +27,8 @@ import com.rentiq.model.Vehicle;
 import com.rentiq.service.BookingService;
 import com.rentiq.service.UserService;
 import com.rentiq.service.VehicleService;
+import com.rentiq.database.DatabaseConnection;
+import com.rentiq.database.DatabaseConnectionTest;
 import com.rentiq.ui.console.ConsoleApp;
 import com.rentiq.util.CollectionDemo;
 import java.util.Scanner;
@@ -45,12 +47,14 @@ import java.util.Scanner;
  *   atomicity, and memory visibility).
  * - Thread Coordination (wait(), notify(), notifyAll(), guarded blocks in while loops,
  *   Producer-Consumer bounded buffer, and graceful shutdown).
+ * - MySQL Database Design & JDBC Connectivity (Phase 3 Milestones 1 & 2: DatabaseConfig,
+ *   DatabaseConnection, schema.sql, sample-data.sql, connection validation & diagnostics).
  */
 public class Main {
     public static void main(String[] args) {
         System.out.println("============================================================");
-        System.out.println("   RentIQ - Vehicle Rental System (Phase 2, Milestone 4)    ");
-        System.out.println("   Thread Coordination & Producer-Consumer (Java 26)        ");
+        System.out.println("   RentIQ - Vehicle Rental System (Phase 3, Milestones 1-2) ");
+        System.out.println("   MySQL Database Design & JDBC Connectivity (Java 26)      ");
         System.out.println("============================================================\n");
 
         // 1. Initialize Core Services
@@ -132,11 +136,23 @@ public class Main {
         demonstrateThreadCoordinationFeatures(bookingService, vehicleService, alice, bob, elena);
 
         // ------------------------------------------------------------
-        // SECTION G: Console Application Automated Demonstration
+        // SECTION G: MySQL Database Connectivity & Verification (Phase 3 - Milestone 2)
+        // ------------------------------------------------------------
+        System.out.println("\n>>> Running JDBC Connectivity Verification <<<");
+        DatabaseConnectionTest.runConnectionTest();
+
+        // ------------------------------------------------------------
+        // SECTION H: Console Application Automated Demonstration
         // ------------------------------------------------------------
         System.out.println("\n>>> Launching Console Application Demonstration <<<");
         String simulatedConsoleInput =
-            // 1. Main menu option 14: Enter Milestone 4 Submenu (Thread Coordination)
+            // 1. Main menu option 15: Enter Database Connectivity Submenu (Phase 3)
+            "15\n" +
+            "1\n" +                       // Submenu 1: Test MySQL Connection
+            "2\n" +                       // Submenu 2: Display Database Connection Status & Configuration
+            "3\n" + "\n" +                // Submenu 3: Execute verification query (default query)
+            "4\n" +                       // Submenu 4: Return to Main Menu
+            // 2. Main menu option 14: Enter Milestone 4 Submenu (Thread Coordination)
             "14\n" +
             "1\n" +                       // Submenu 1: wait()
             "2\n" +                       // Submenu 2: notify()
@@ -146,7 +162,7 @@ public class Main {
             "6\n" +                       // Submenu 6: Integrated booking processing
             "7\n" +                       // Submenu 7: Graceful thread shutdown
             "8\n" +                       // Submenu 8: Return to Main Menu
-            // 2. Main menu option 13: Enter Milestone 3 Submenu (Multithreading Fundamentals)
+            // 3. Main menu option 13: Enter Milestone 3 Submenu (Multithreading Fundamentals)
             "13\n" +
             "1\n" +                       // Submenu 1: Thread creation via Thread
             "2\n" +                       // Submenu 2: Thread creation via Runnable
@@ -161,21 +177,24 @@ public class Main {
             "11\n" +                      // Submenu 11: Race condition vs synchronized booking
             "12\n" +                      // Submenu 12: Atomicity & visibility
             "13\n" +                      // Submenu 13: Return to Main Menu
-            // 3. Main menu operations
+            // 4. Main menu operations
             "12\n" + "1\n" + "U1001\n" + "14\n" + // Milestone 2 submenu HashMap lookup then return
             "8\n" + "\n" +                // 8. View Recently Viewed Vehicles (LinkedList)
             "9\n" +                       // 9. View Unique Categories (HashSet/LinkedHashSet)
             "10\n" +                      // 10. View Sorted Categories (TreeSet)
             "99\n" +                      // Invalid choice test
-            "15\n";                       // 15. Exit
+            "16\n";                       // 16. Exit
 
         Scanner consoleScanner = new Scanner(simulatedConsoleInput);
         ConsoleApp consoleApp = new ConsoleApp(userService, vehicleService, bookingService, consoleScanner);
         consoleApp.start();
 
         System.out.println("\n============================================================");
-        System.out.println("   RentIQ Phase 2 Milestone 4 Completed Successfully!       ");
+        System.out.println("   RentIQ Phase 3 Milestones 1 & 2 Completed Successfully!   ");
         System.out.println("============================================================");
+
+        // Clean up MySQL driver daemon cleanup thread to ensure immediate JVM shutdown
+        DatabaseConnection.shutdown();
     }
 
     /**
