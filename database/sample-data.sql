@@ -11,13 +11,13 @@ USE rentiq_db;
 -- 1. Insert Sample Users (1 Administrator, 4 Customers)
 -- Password hashes represent SHA-256 digest of sample passphrases (Never plain-text)
 -- ----------------------------------------------------------------------------
-INSERT INTO users (user_id, name, email, password_hash, phone, role, driving_license_number, membership_level, department, admin_role)
+INSERT INTO users (user_id, name, email, password_hash, phone, role, driving_license_number, department, admin_role)
 VALUES
-('U9001', 'David Miller', 'admin@rentiq.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', '+1-555-0999', 'ADMIN', NULL, NULL, 'Fleet Management', 'Operations Lead'),
-('U1001', 'Alice Johnson', 'alice@example.com', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', '+1-555-0101', 'CUSTOMER', 'DL-98765-XYZ', 'Platinum VIP', NULL, NULL),
-('U1002', 'Bob Smith', 'bob@example.com', '4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a', '+1-555-0102', 'CUSTOMER', 'DL-12345-ABC', 'Standard', NULL, NULL),
-('U1003', 'Elena Rostova', 'elena@example.com', 'ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d', '+1-555-0103', 'CUSTOMER', 'DL-77889-ER', 'Gold VIP', NULL, NULL),
-('U1004', 'Carlos Mendez', 'carlos@example.com', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', '+1-555-0104', 'CUSTOMER', 'DL-33445-CM', 'Standard', NULL, NULL)
+('U9001', 'David Miller', 'admin@rentiq.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', '+1-555-0999', 'ADMIN', NULL, 'Fleet Management', 'Operations Lead'),
+('U1001', 'Alice Johnson', 'alice@example.com', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', '+1-555-0101', 'CUSTOMER', 'DL-98765-XYZ', NULL, NULL),
+('U1002', 'Bob Smith', 'bob@example.com', '4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a', '+1-555-0102', 'CUSTOMER', 'DL-12345-ABC', NULL, NULL),
+('U1003', 'Elena Rostova', 'elena@example.com', 'ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d', '+1-555-0103', 'CUSTOMER', 'DL-77889-ER', NULL, NULL),
+('U1004', 'Carlos Mendez', 'carlos@example.com', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', '+1-555-0104', 'CUSTOMER', 'DL-33445-CM', NULL, NULL)
 ON DUPLICATE KEY UPDATE name = VALUES(name), phone = VALUES(phone);
 
 -- ----------------------------------------------------------------------------

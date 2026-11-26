@@ -1,10 +1,5 @@
 package com.rentiq.model;
 
-/**
- * Represents a user in the RentIQ system.
- * Demonstrates Core Java fundamentals: classes, objects, encapsulation,
- * access modifiers, constructors, and the 'this' keyword.
- */
 public class User {
     private String userId;
     private String name;
@@ -12,11 +7,9 @@ public class User {
     private String password;
     private String phoneNumber;
 
-    // Default constructor
     public User() {
     }
 
-    // Parameterized constructor
     public User(String userId, String name, String email, String password, String phoneNumber) {
         this.userId = userId;
         this.name = name;
@@ -25,12 +18,10 @@ public class User {
         this.phoneNumber = phoneNumber;
     }
 
-    // Overloaded constructor without password
     public User(String userId, String name, String email, String phoneNumber) {
         this(userId, name, email, "", phoneNumber);
     }
 
-    // Getters and Setters
     public String getUserId() {
         return this.userId;
     }
@@ -79,7 +70,6 @@ public class User {
         this.phoneNumber = phone;
     }
 
-    // Method to display user details
     public void displayUserInfo() {
         System.out.println("----- User Details -----");
         System.out.println("User ID      : " + this.userId);

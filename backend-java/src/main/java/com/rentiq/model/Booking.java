@@ -1,12 +1,7 @@
 package com.rentiq.model;
 
-/**
- * Represents a vehicle booking in the RentIQ system.
- * Demonstrates Core Java concepts: encapsulation, constructors, static members,
- * composition, and polymorphic method delegation.
- */
 public class Booking {
-    // Static members: shared across all instances
+
     private static int idCounter = 1000;
     private static int totalBookingsCount = 0;
 
@@ -15,19 +10,16 @@ public class Booking {
     private Vehicle vehicle;
     private int rentalDays;
     private double totalAmount;
-    private String bookingStatus; // "CONFIRMED", "CANCELLED", "PENDING"
+    private String bookingStatus;
 
-    // Default constructor
     public Booking() {
         totalBookingsCount++;
     }
 
-    // Parameterized constructor with auto-generated booking ID
     public Booking(Customer customer, Vehicle vehicle, int rentalDays) {
         this(generateNextBookingId(), customer, vehicle, rentalDays);
     }
 
-    // Full Parameterized constructor
     public Booking(String bookingId, Customer customer, Vehicle vehicle, int rentalDays) {
         this.bookingId = bookingId;
         this.customer = customer;
@@ -38,18 +30,15 @@ public class Booking {
         totalBookingsCount++;
     }
 
-    // Static helper method to generate unique sequential booking IDs
     public static String generateNextBookingId() {
         idCounter++;
         return "BK-" + idCounter;
     }
 
-    // Static getter to retrieve total bookings count
     public static int getTotalBookingsCount() {
         return totalBookingsCount;
     }
 
-    // Rental cost calculation delegating to Vehicle's polymorphic calculateRentalCost method
     public double calculateRentalCost() {
         if (this.vehicle != null && this.rentalDays > 0) {
             return this.vehicle.calculateRentalCost(this.rentalDays);
@@ -57,7 +46,6 @@ public class Booking {
         return 0.0;
     }
 
-    // Getters and Setters
     public String getBookingId() {
         return this.bookingId;
     }
@@ -109,7 +97,6 @@ public class Booking {
         this.bookingStatus = bookingStatus;
     }
 
-    // Method to display booking information
     public void displayBookingDetails() {
         System.out.println("================ Booking Summary ================");
         System.out.println("Booking ID     : " + this.bookingId);

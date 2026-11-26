@@ -1,196 +1,316 @@
 package com.rentiq.service;
 
-import com.rentiq.exception.InvalidUserException;
+import com.rentiq.database.DatabaseConnection;
 import com.rentiq.model.Admin;
 import com.rentiq.model.Customer;
 import com.rentiq.model.User;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
-/**
- * Service managing user registration and queries.
- * Integrates:
- * - ArrayList: dynamic user storage.
- * - HashMap: O(1) User ID to User entity lookup.
- * - LinkedHashMap: tracks recent user registrations in exact insertion order.
- */
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.UUID;
+
 public class UserService {
-    private List<User> users;
-    private Map<String, User> userMap;
-    private LinkedHashMap<String, User> recentRegistrations;
-    private static int userCounter = 1000;
 
-    // StringBuffer demonstrating mutable thread-safe string buffer for audit history
-    private StringBuffer auditLog;
-
-    public UserService() {
-        this.users = new ArrayList<>();
-        this.userMap = new HashMap<>();
-        this.recentRegistrations = new LinkedHashMap<>();
-        this.auditLog = new StringBuffer("=== User Service Audit Log ===\n");
-    }
-
-    public UserService(int initialCapacity) {
-        this.users = new ArrayList<>(initialCapacity);
-        this.userMap = new HashMap<>(initialCapacity);
-        this.recentRegistrations = new LinkedHashMap<>(initialCapacity);
-        this.auditLog = new StringBuffer("=== User Service Audit Log ===\n");
-    }
-
-    /**
-     * Validates user credentials and input parameters using Core Java String operations.
-     */
-    public void validateUserInput(String name, String email, String phone) throws InvalidUserException {
+    public void validateUserInput(String name, String email, String phone) throws Exception {
         if (name == null || name.trim().isEmpty()) {
-            throw new InvalidUserException("Validation Failed: User name cannot be empty or null.");
+            throw new Exception("Validation Failed: User name cannot be empty or null.");
         }
+
         if (email == null || email.trim().isEmpty()) {
-            throw new InvalidUserException("Validation Failed: Email address cannot be empty.");
+            throw new Exception("Validation Failed: Email address cannot be empty.");
         }
+
         String cleanEmail = email.trim();
         int atIndex = cleanEmail.indexOf('@');
         int dotIndex = cleanEmail.lastIndexOf('.');
+
         if (atIndex <= 0 || dotIndex <= atIndex + 1 || dotIndex >= cleanEmail.length() - 1) {
-            throw new InvalidUserException("Validation Failed: Invalid email format '" + email + "'. Must follow user@domain.com");
+            throw new Exception("Validation Failed: Invalid email format.");
         }
+
         if (phone == null || phone.trim().isEmpty() || phone.trim().length() < 7) {
-            throw new InvalidUserException("Validation Failed: Invalid phone number. Must contain at least 7 digits.");
+            throw new Exception("Validation Failed: Invalid phone number.");
+        }
+
+        if (emailExists(cleanEmail)) {
+            throw new Exception("Registration Failed: Email is already registered.");
         }
     }
 
-    /**
-     * Registers a new customer after input validation.
-     * Prevents duplicate IDs and synchronizes ArrayList, HashMap, and LinkedHashMap.
-     */
-    public Customer registerCustomer(String name, String email, String phone, String password,
-                                    String drivingLicense, String membershipLevel) throws InvalidUserException {
+    public Customer registerCustomer(String name, String email, String phone,
+            String password, String drivingLicense) throws Exception {
+
         validateUserInput(name, email, phone);
 
+        if (password == null || password.trim().isEmpty()) {
+            throw new Exception("Registration Failed: Password cannot be empty.");
+        }
+
         if (drivingLicense == null || drivingLicense.trim().isEmpty()) {
-            throw new InvalidUserException("Validation Failed: Customer must provide a valid driving license.");
+            throw new Exception("Validation Failed: Customer must provide a valid driving license.");
         }
 
-        String userId = "U" + (++userCounter);
+        String userId = generateUserId("U");
 
-        // Guard against duplicate user IDs
-        if (userMap.containsKey(userId.toUpperCase())) {
-            throw new InvalidUserException("Registration Failed: Duplicate User ID '" + userId + "' detected.");
+        Customer customer = new Customer(
+                userId,
+                name.trim(),
+                email.trim(),
+                password,
+                phone.trim(),
+                drivingLicense.trim());
+
+        if (!saveUserToDatabase(customer)) {
+            throw new Exception("Registration Failed: Could not save customer to database.");
         }
 
-        Customer customer = new Customer(userId, name.trim(), email.trim(), password, phone.trim(),
-                                         drivingLicense.trim(), (membershipLevel != null && !membershipLevel.trim().isEmpty()) ? membershipLevel.trim() : "Standard");
+        System.out.println("[UserService] Successfully registered Customer: "
+                + customer.getName() + " (ID: " + customer.getUserId() + ")");
 
-        // Synchronize list and maps
-        users.add(customer);
-        userMap.put(customer.getUserId().toUpperCase(), customer);
-        recentRegistrations.put(customer.getUserId(), customer);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("[UserService] Successfully registered Customer: ")
-          .append(customer.getName())
-          .append(" (ID: ").append(customer.getUserId())
-          .append(", Tier: ").append(customer.getMembershipLevel())
-          .append(", License: ").append(customer.getDrivingLicenseNumber()).append(")");
-        System.out.println(sb.toString());
-
-        auditLog.append(System.currentTimeMillis()).append(" - Registered Customer: ").append(userId).append("\n");
         return customer;
     }
 
-    /**
-     * Registers an administrator.
-     * Synchronizes ArrayList, HashMap, and LinkedHashMap.
-     */
-    public Admin registerAdmin(String name, String email, String phone, String password,
-                               String department, String adminRole) throws InvalidUserException {
+    public Admin registerAdmin(String name, String email, String phone,
+            String password, String department, String adminRole) throws Exception {
+
         validateUserInput(name, email, phone);
 
-        String userId = "A" + (++userCounter);
-
-        if (userMap.containsKey(userId.toUpperCase())) {
-            throw new InvalidUserException("Registration Failed: Duplicate Admin ID '" + userId + "' detected.");
+        if (password == null || password.trim().isEmpty()) {
+            throw new Exception("Registration Failed: Password cannot be empty.");
         }
 
-        Admin admin = new Admin(userId, name.trim(), email.trim(), password, phone.trim(),
-                                (department != null ? department.trim() : "General"),
-                                (adminRole != null ? adminRole.trim() : "Staff"));
+        String userId = generateUserId("A");
 
-        users.add(admin);
-        userMap.put(admin.getUserId().toUpperCase(), admin);
-        recentRegistrations.put(admin.getUserId(), admin);
+        String dept = (department != null) ? department.trim() : "General";
+        String role = (adminRole != null) ? adminRole.trim() : "Staff";
 
-        auditLog.append(System.currentTimeMillis()).append(" - Registered Admin: ").append(userId).append("\n");
+        Admin admin = new Admin(
+                userId,
+                name.trim(),
+                email.trim(),
+                password,
+                phone.trim(),
+                dept,
+                role);
+
+        if (!saveUserToDatabase(admin)) {
+            throw new Exception("Registration Failed: Could not save admin to database.");
+        }
+
         return admin;
     }
 
-    /**
-     * Searches a user by ID in O(1) time using HashMap lookup.
-     */
+    private String generateUserId(String prefix) {
+        return prefix + UUID.randomUUID().toString().replace("-", "").substring(0, 10).toUpperCase();
+    }
+
+    private boolean emailExists(String email) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email.trim().toLowerCase());
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
     public User findUserById(String userId) {
+        try {
+            return getUserFromDatabase(userId);
+        } catch (SQLException e) {
+            System.out.println("[Database Error] Unable to find user: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public User authenticate(String email, String password) {
+        if (email == null || password == null) {
+            return null;
+        }
+
+        try {
+            User user = getUserByEmailFromDatabase(email);
+
+            if (user != null && hashPassword(password).equals(user.getPassword())) {
+                return user;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("[Database Error] Login failed: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    public boolean saveUserToDatabase(User user) throws SQLException {
+        if (user == null || user.getUserId() == null) {
+            return false;
+        }
+
+        String sql = "INSERT INTO users (user_id, name, email, password_hash, phone, role, "
+                + "driving_license_number, department, admin_role) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, user.getUserId().trim());
+            pstmt.setString(2, user.getName().trim());
+            pstmt.setString(3, user.getEmail().trim().toLowerCase());
+            pstmt.setString(4, hashPassword(user.getPassword()));
+            pstmt.setString(5, user.getPhone().trim());
+
+            if (user instanceof Admin) {
+                Admin admin = (Admin) user;
+
+                pstmt.setString(6, "ADMIN");
+                pstmt.setNull(7, Types.VARCHAR);
+                pstmt.setString(8, admin.getDepartment());
+                pstmt.setString(9, admin.getAdminRole());
+
+            } else if (user instanceof Customer) {
+                Customer customer = (Customer) user;
+
+                pstmt.setString(6, "CUSTOMER");
+                pstmt.setString(7, customer.getDrivingLicenseNumber());
+                pstmt.setNull(8, Types.VARCHAR);
+                pstmt.setNull(9, Types.VARCHAR);
+
+            } else {
+                return false;
+            }
+
+            return pstmt.executeUpdate() > 0;
+        }
+    }
+
+    public User getUserFromDatabase(String userId) throws SQLException {
         if (userId == null || userId.trim().isEmpty()) {
             return null;
         }
-        return userMap.get(userId.trim().toUpperCase());
-    }
 
-    /**
-     * Displays all users.
-     */
-    public void displayAllUsers() {
-        System.out.println("\n============== Registered RentIQ Users (" + users.size() + ") ==============");
-        if (users.isEmpty()) {
-            System.out.println("No users currently registered.");
-            System.out.println("============================================================\n");
-            return;
+        String sql = "SELECT * FROM users WHERE user_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userId.trim());
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
         }
-        for (User user : users) {
-            user.displayUserInfo();
+
+        return null;
+    }
+
+    public User getUserByEmailFromDatabase(String email) throws SQLException {
+        if (email == null || email.trim().isEmpty()) {
+            return null;
         }
-        System.out.println("============================================================\n");
-    }
 
-    /**
-     * Displays recently registered users preserving exact insertion order using LinkedHashMap.
-     */
-    public void displayRecentRegistrations() {
-        System.out.println("\n===== Recent User Registrations (LinkedHashMap - Insertion Order) =====");
-        if (recentRegistrations.isEmpty()) {
-            System.out.println("No user registrations recorded.");
-            System.out.println("=======================================================================\n");
-            return;
+        String sql = "SELECT * FROM users WHERE email = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email.trim().toLowerCase());
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
         }
-        int rank = 1;
-        for (Map.Entry<String, User> entry : recentRegistrations.entrySet()) {
-            User u = entry.getValue();
-            System.out.printf("%d. [%s] %s (%s) - %s\n",
-                rank++, entry.getKey(), u.getName(),
-                (u instanceof Customer ? "Customer: " + ((Customer) u).getMembershipLevel() : "Admin"),
-                u.getEmail());
+
+        return null;
+    }
+
+    public void displayDatabaseStatistics() throws SQLException {
+        String sql = "SELECT "
+                + "(SELECT COUNT(*) FROM users) AS total_users, "
+                + "(SELECT COUNT(*) FROM users WHERE role = 'CUSTOMER') AS customer_count, "
+                + "(SELECT COUNT(*) FROM users WHERE role = 'ADMIN') AS admin_count, "
+                + "(SELECT COUNT(*) FROM vehicles) AS total_vehicles, "
+                + "(SELECT COUNT(*) FROM bookings) AS total_bookings";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                System.out.println("========== MySQL Database Statistics ==========");
+                System.out.println("Total Users    : " + rs.getInt("total_users"));
+                System.out.println("  - Customers  : " + rs.getInt("customer_count"));
+                System.out.println("  - Admins     : " + rs.getInt("admin_count"));
+                System.out.println("Total Vehicles : " + rs.getInt("total_vehicles"));
+                System.out.println("Total Bookings : " + rs.getInt("total_bookings"));
+                System.out.println("===============================================");
+            }
         }
-        System.out.println("=======================================================================\n");
     }
 
-    public int getUserCount() {
-        return this.users.size();
+    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+        String id = rs.getString("user_id");
+        String name = rs.getString("name");
+        String email = rs.getString("email");
+        String passwordHash = rs.getString("password_hash");
+        String phone = rs.getString("phone");
+        String role = rs.getString("role");
+
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            String dept = rs.getString("department");
+            String title = rs.getString("admin_role");
+
+            return new Admin(id, name, email, passwordHash, phone, dept, title);
+        }
+
+        String license = rs.getString("driving_license_number");
+
+        return new Customer(id, name, email, passwordHash, phone, license);
     }
 
-    public List<User> getAllUsers() {
-        return Collections.unmodifiableList(this.users);
-    }
+    public static String hashPassword(String rawPassword) {
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            return "";
+        }
 
-    public Map<String, User> getUserMap() {
-        return Collections.unmodifiableMap(this.userMap);
-    }
+        if (rawPassword.length() == 64 && rawPassword.matches("^[0-9a-fA-F]+$")) {
+            return rawPassword.toLowerCase();
+        }
 
-    public LinkedHashMap<String, User> getRecentRegistrations() {
-        return new LinkedHashMap<>(this.recentRegistrations);
-    }
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
 
-    public String getAuditLog() {
-        return this.auditLog.toString();
+            StringBuilder hexString = new StringBuilder();
+
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+
+        } catch (Exception e) {
+            throw new IllegalStateException("Password hashing failed.", e);
+        }
     }
 }

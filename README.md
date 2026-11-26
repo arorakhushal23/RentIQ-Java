@@ -23,11 +23,15 @@ RentIQ-Java follows a clean layered architecture, demonstrating core object-orie
    - [4.4 Connection Testing & Diagnostic Harness (`DatabaseConnectionTest.java`)](#44-connection-testing--diagnostic-harness-databaseconnectiontestjava)
    - [4.5 Security & Environment Management](#45-security--environment-management)
    - [4.6 Graceful Degradation When MySQL is Offline](#46-graceful-degradation-when-mysql-is-offline)
-5. [Phase 2, Milestone 4: Thread Coordination Deep Dive](#phase-2-milestone-4-thread-coordination-deep-dive)
-6. [Educational Demonstrations Overview](#educational-demonstrations-overview)
-7. [Console Application Menu Structure](#console-application-menu-structure)
-8. [How to Compile, Test, and Run](#how-to-compile-test-and-run)
-9. [Viva & Technical Interview Q&A](#viva--technical-interview-qa)
+5. [Phase 3, Milestone 3: DAO Layer & User Management (MySQL CRUD)](#phase-3-milestone-3-dao-layer--user-management-mysql-crud)
+   - [5.1 UserDAO Design & CRUD Operations](#51-userdao-design--crud-operations)
+   - [5.2 Live Database Statistics (`DatabaseStatistics.java`)](#52-live-database-statistics-databasestatisticsjava)
+   - [5.3 Interactive Database Management Console](#53-interactive-database-management-console)
+6. [Phase 2, Milestone 4: Thread Coordination Deep Dive](#phase-2-milestone-4-thread-coordination-deep-dive)
+7. [Educational Demonstrations Overview](#educational-demonstrations-overview)
+8. [Console Application Menu Structure](#console-application-menu-structure)
+9. [How to Compile, Test, and Run](#how-to-compile-test-and-run)
+10. [Viva & Technical Interview Q&A](#viva--technical-interview-qa)
 
 ---
 
@@ -74,51 +78,24 @@ RentIQ-Java/
 │   └── src/
 │       ├── main/
 │       │   ├── java/com/rentiq/
-│       │   │   ├── Main.java                           # Application entry point & automated runner
-│       │   │   ├── config/                             # Configuration Layer
-│       │   │   │   └── DatabaseConfig.java             # Safe DB config manager (env vars, .env, defaults)
-│       │   │   ├── database/                           # Database & JDBC Layer
-│       │   │   │   ├── DatabaseConnection.java         # JDBC connection manager via DriverManager
-│       │   │   │   └── DatabaseConnectionTest.java     # Connection verification test harness & query runner
-│       │   │   ├── concurrency/                        # Multithreading & Thread Coordination
-│       │   │   │   ├── AtomicityVisibilityDemo.java    # Unsafe vs Sync vs AtomicInteger & Volatile
-│       │   │   │   ├── BookingConsumer.java            # Consumer worker processing booking requests
-│       │   │   │   ├── BookingNotificationTask.java    # Runnable async notification worker
-│       │   │   │   ├── BookingProducer.java            # Producer worker submitting booking requests
-│       │   │   │   ├── BookingRequestBuffer.java       # Thread-safe bounded buffer with wait/notifyAll
-│       │   │   │   ├── FleetMonitorThread.java         # Background audit thread extending Thread
-│       │   │   │   ├── GuardedBlockDemo.java           # Guarded block condition evaluation in while loops
-│       │   │   │   ├── NotifyAllDemo.java              # Multiple waiting consumers & notifyAll demo
-│       │   │   │   ├── ProducerConsumerDemo.java       # Complete Producer-Consumer integrated simulation
-│       │   │   │   ├── RaceConditionDemo.java          # Double-booking race condition vs synchronized fix
-│       │   │   │   ├── StartVsRunDemo.java             # start() new thread vs run() calling thread
-│       │   │   │   ├── ThreadLifecycleDemo.java        # NEW, RUNNABLE, TIMED_WAITING, WAITING, TERMINATED
-│       │   │   │   ├── ThreadPriorityDemo.java         # MIN_PRIORITY, NORM_PRIORITY, MAX_PRIORITY
-│       │   │   │   └── WaitNotifyDemo.java             # wait() atomic lock release and notify() wakeup
-│       │   │   ├── exception/                          # Custom checked domain exceptions
-│       │   │   │   ├── InvalidBookingException.java
-│       │   │   │   ├── InvalidUserException.java
-│       │   │   │   └── VehicleNotAvailableException.java
-│       │   │   ├── model/                              # Domain entities
-│       │   │   │   ├── Admin.java
-│       │   │   │   ├── Bike.java
-│       │   │   │   ├── Booking.java
-│       │   │   │   ├── BookingRequest.java
-│       │   │   │   ├── Car.java
-│       │   │   │   ├── Customer.java
-│       │   │   │   ├── User.java
-│       │   │   │   └── Vehicle.java
-│       │   │   ├── service/                            # Layered business logic services
-│       │   │   │   ├── BookingService.java             # Synchronized booking & queue processing
-│       │   │   │   ├── UserService.java                # Customer/Admin registration & HashMaps
-│       │   │   │   └── VehicleService.java             # Fleet inventory, Sets, sorting & search
-│       │   │   ├── ui/console/
-│       │   │   │   └── ConsoleApp.java                 # Interactive 16-option console menu
-│       │   │   └── util/
-│       │   │       ├── CollectionDemo.java             # Collections framework educational showcase
-│       │   │       ├── DynamicArray.java               # Custom resizable array implementation
-│       │   │       ├── GenericLinkedList.java          # Custom doubly-linked list implementation
-│       │   │       └── VehicleComparators.java         # Multi-attribute vehicle comparators
+│       │   │   ├── Main.java                           # Application entry point & demo runner
+│       │   │   ├── model/                              # Core OOP domain models
+│       │   │   │   ├── Admin.java                      # Admin user model (extends User)
+│       │   │   │   ├── Bike.java                       # Motorcycle model (extends Vehicle)
+│       │   │   │   ├── Booking.java                    # Rental booking model
+│       │   │   │   ├── Car.java                        # Car model (extends Vehicle)
+│       │   │   │   ├── Customer.java                   # Customer user model (extends User)
+│       │   │   │   ├── User.java                       # Base user model
+│       │   │   │   └── Vehicle.java                    # Abstract vehicle model (implements Comparable)
+│       │   │   ├── service/                            # Business logic & direct JDBC operations
+│       │   │   │   ├── BookingService.java             # Booking creation, cancellation, sync & JDBC
+│       │   │   │   ├── UserService.java                # Customer/Admin registration, auth & JDBC
+│       │   │   │   └── VehicleService.java             # Fleet inventory, sorting, comparison & JDBC
+│       │   │   ├── database/                           # Direct JDBC Connection Layer
+│       │   │   │   └── DatabaseConnection.java         # JDBC connection manager via DriverManager
+│       │   │   └── ui/                                 # User interface & Demonstrations
+│       │   │       ├── ConsoleApp.java                 # Interactive 10-option console menu
+│       │   │       └── MultithreadingDemo.java         # All 8 multithreading concepts consolidated
 │       │   └── resources/
 │       │       └── db/
 │       │           ├── sample-data.sql                 # Seed data (Users, Vehicles, Bookings)
@@ -157,7 +134,6 @@ erDiagram
         VARCHAR(20) phone
         VARCHAR(20) role "CUSTOMER | ADMIN"
         VARCHAR(50) driving_license_number "NULL for Admin"
-        VARCHAR(30) membership_level "Standard | Gold VIP | Platinum VIP"
         VARCHAR(100) department "NULL for Customer"
         VARCHAR(100) admin_role "NULL for Customer"
         TIMESTAMP created_at
@@ -203,7 +179,6 @@ erDiagram
    - **Primary Key:** `user_id` (e.g. `U1001`, `U9001`).
    - **Unique Key:** `email` ensures no duplicate user accounts.
    - **Check Constraint:** `role IN ('CUSTOMER', 'ADMIN')`.
-   - **Check Constraint:** `membership_level IN ('Standard', 'Gold VIP', 'Platinum VIP')`.
    - **Security:** Plaintext passwords are never stored; `password_hash` stores 64-character SHA-256 digests.
 
 2. **`vehicles` Table:**
@@ -264,7 +239,7 @@ UNION ALL SELECT 'bookings', COUNT(*) FROM bookings;
 
 ### 4.1 Architecture Overview
 
-RentIQ implements standard JDBC without heavy ORM frameworks (No Spring Boot, No Hibernate, No JPA):
+RentIQ implements standard direct JDBC without heavy ORM frameworks (No Spring Boot, No Hibernate, No JPA):
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -273,53 +248,39 @@ RentIQ implements standard JDBC without heavy ORM frameworks (No Spring Boot, No
                            │
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│             DatabaseConnectionTest.java                │
-│    (Ping Query, Metadata Inspection, Diagnostics)      │
+│      Services Layer (UserService, VehicleService,      │
+│                    BookingService)                     │
+│    (Direct PreparedStatement, ResultSet, CRUD)         │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼
 ┌────────────────────────────────────────────────────────┐
 │               DatabaseConnection.java                  │
-│       (getConnection, isValid, Error Translation)      │
-└──────────────┬─────────────────────────┬───────────────┘
-               │                         │
-               ▼                         ▼
-┌────────────────────────────┐ ┌─────────────────────────┐
-│    DatabaseConfig.java     │ │   MySQL Connector/J     │
-│  (Env Vars, .env, Defaults)│ │ (com.mysql.cj.jdbc.     │
-│                            │ │        Driver)          │
-└────────────────────────────┘ └───────────┬─────────────┘
-                                           │
-                                           ▼
-                               ┌─────────────────────────┐
-                               │   MySQL Server (3306)   │
-                               │      (rentiq_db)        │
-                               └─────────────────────────┘
+│            (getConnection, testConnection)             │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│        MySQL Connector/J (com.mysql.cj.jdbc.Driver)    │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+               ┌─────────────────────────┐
+               │   MySQL Server (3306)   │
+               │      (rentiq_db)        │
+               └─────────────────────────┘
 ```
 
-### 4.2 Database Configuration (`DatabaseConfig.java`)
-- **Credential Hierarchy:**
-  1. Primary Environment Variables (`RENTIQ_DB_URL`, `RENTIQ_DB_USERNAME`, `RENTIQ_DB_PASSWORD`)
-  2. Standard Fallback Variables (`DB_URL`, `DB_USER`, `DB_PASSWORD`)
-  3. Local `.env` file (parsed using Core Java standard library)
-  4. Safe local default (`jdbc:mysql://localhost:3306/rentiq_db`, user `root`, empty password)
-- **Security:** `getMaskedPassword()` masks sensitive information (e.g. `********`), ensuring credentials are never exposed in logs or user-facing output.
-
-### 4.3 Database Connection Utility (`DatabaseConnection.java`)
-- **Driver Loading:** Explicitly registers `com.mysql.cj.jdbc.Driver`.
+### 4.2 Database Connection Utility (`DatabaseConnection.java`)
+- **Driver Loading:** Explicitly registers `com.mysql.cj.jdbc.Driver` via static block.
 - **Factory Method:** `getConnection()` returns a new `java.sql.Connection` managed via `DriverManager`.
-- **Health Validation:** `isConnectionValid(Connection, timeoutSeconds)` verifies connection responsiveness.
-- **Diagnostic Method:** `testConnection()` executes a non-intrusive probe and returns structured diagnostic information (`serverVersion`, `databaseName`, `responseTimeMs`).
+- **Diagnostic Method:** `testConnection()` executes a non-intrusive probe and returns boolean connectivity status.
+- **Environment Support:** Reads environment variables (`RENTIQ_DB_URL`, `RENTIQ_DB_USERNAME`, `RENTIQ_DB_PASSWORD`) or defaults to localhost root.
 
-### 4.4 Connection Testing & Diagnostic Harness (`DatabaseConnectionTest.java`)
-- Executes test workflow:
-  1. Config loading & sanitized display
-  2. Connection establishment
-  3. Metadata inspection (DBMS product, driver version, active database catalog)
-  4. SELECT ping query (`SELECT 1 AS ping, CURRENT_TIMESTAMP, DATABASE()`)
-  5. Table record count query (`users`, `vehicles`, `bookings`)
-  6. Resource closure via try-with-resources
-- Exposes `executeVerificationQuery(String sql)` with strict read-only security guards (allowing only `SELECT` and `SHOW`).
+### 4.3 Direct Service-Layer JDBC Operations
+- **`UserService`:** Handles `saveUserToDatabase`, `getUserFromDatabase`, `getAllUsersFromDatabase`, `updateUserInDatabase`, `deleteUserFromDatabase`, and `displayDatabaseStatistics`.
+- **`VehicleService`:** Handles `saveVehicleToDatabase`, `getVehicleFromDatabase`, `getAllVehiclesFromDatabase`, and `updateVehicleAvailabilityInDatabase`.
+- **`BookingService`:** Handles `saveBookingToDatabase`, `getAllBookingsFromDatabase`, and `cancelBookingInDatabase`.
 
 ### 4.5 Security & Environment Management
 - Real passwords are never committed to version control.
@@ -335,6 +296,32 @@ RentIQ implements standard JDBC without heavy ORM frameworks (No Spring Boot, No
 If MySQL is not installed or unreachable:
 - `DatabaseConnection.testConnection()` and `DatabaseConnectionTest.runConnectionTest()` catch `SQLException`, output friendly diagnostic guidance, and return `false`.
 - The application and all in-memory domain demonstrations (Collections, Maps, Multithreading, Thread Coordination, and Console operations) continue running with zero crashes.
+
+---
+
+## Phase 3, Milestone 3: DAO Layer & User Management (MySQL CRUD)
+
+### 5.1 UserDAO Design & CRUD Operations
+`UserDAO.java` encapsulates all relational data access for the `users` table:
+- **`createUser(User user)`**: Inserts a new Customer or Admin using parameterized `PreparedStatement`. Hashes passwords with SHA-256 before writing to disk.
+- **`getUserById(String userId)`**: Queries by primary key and polymorphically constructs a concrete `Customer` or `Admin` instance based on `role`.
+- **`getUserByEmail(String email)`**: Looks up users by unique email.
+- **`getAllUsers()`**: Retrieves all records ordered by creation time.
+- **`updateUser(User user)`**: Updates user contact information and role-specific attributes while guarding against duplicate emails.
+- **`deleteUser(String userId)`**: Deletes a record by ID, respecting foreign key integrity constraints.
+
+### 5.2 Live Database Statistics (`DatabaseStatistics.java`)
+Aggregates live SQL counts in a single query across all three domain tables:
+- **Users**: Total Users, Customers, Administrators.
+- **Vehicles**: Total Vehicles, Cars, Bikes, Currently Available.
+- **Bookings**: Total Bookings, Active/Confirmed, Completed, Cancelled.
+
+### 5.3 Interactive Database Management Console
+Integrates cleanly into `ConsoleApp.java` under Option 15:
+- **User Management Submenu**: Real-time CRUD operations against live MySQL records.
+- **Vehicle & Booking Management**: Placeholders displaying development roadmap notices.
+- **Database Statistics**: Live counts from `rentiq_db`.
+- **Connection Test**: Comprehensive ping and metadata inspection.
 
 ---
 
@@ -372,40 +359,57 @@ synchronized (lock) {
 
 ## Console Application Menu Structure
 
-The interactive console menu (`ConsoleApp.java`) provides 16 options:
+The interactive console menu (`ConsoleApp.java`) provides 10 primary options with full keyboard interactivity, input validation, and session management:
 
 ```
------------------ RentIQ Main Menu -----------------
-1.  Register User
-2.  View Users
-3.  View Vehicles
-4.  Search Vehicles
-5.  Book Vehicle
-6.  View Bookings
-7.  Cancel Booking
-8.  View Recently Viewed Vehicles (LinkedList)
-9.  View Unique Vehicle Categories (HashSet & LinkedHashSet)
-10. View Sorted Vehicle Categories (TreeSet)
-11. Run Complete Collections Framework Demonstration
-12. Maps, Queues, Iterators & Sorting Submenu (Milestone 2)
-13. Multithreading Demonstrations Submenu (Milestone 3)
-14. Thread Coordination Demonstrations Submenu (Milestone 4)
-15. Database Connectivity Submenu (Phase 3 - Milestones 1 & 2)
-16. Exit
+----------------------------------------------------
+                 RENTIQ MAIN MENU                   
+----------------------------------------------------
+  Current Session: [Customer / Admin Name or Guest]
+----------------------------------------------------
+ 1. Register Customer
+ 2. Manage Account / Logout
+ 3. View All Vehicles
+ 4. Search Vehicles
+ 5. Compare Vehicles
+ 6. Book Vehicle
+ 7. View My Bookings
+ 8. Cancel Booking
+ 9. Recently Viewed Vehicles
+10. Exit
 ----------------------------------------------------
 ```
 
-### Option 15: Database Connectivity Submenu
+### Main Menu Walkthrough
+1. **Register Customer**: Registers a customer with full name, email, phone, password, and driving license.
+2. **Manage Account / Logout**: Logs in with email/password, displays current active user, or logs out.
+3. **View All Vehicles**: Displays the fleet with sub-options to filter available vehicles, sort by price (asc/desc), rating, or alphabetical order.
+4. **Search Vehicles**: Keyword search across brand, model, and category.
+5. **Compare Vehicles**: Side-by-side comparison of 2 vehicles (pricing advantage, seating, fuel/engine specifications, availability).
+6. **Book Vehicle**: Creates a confirmed booking for the logged-in customer or specified customer ID, updates vehicle availability, and persists to MySQL if connected.
+7. **View My Bookings**: Displays past and active bookings for the specified or logged-in customer.
+8. **Cancel Booking**: Cancels an active booking and automatically restores vehicle availability.
+9. **Recently Viewed Vehicles**: Displays the Most Recently Used (MRU) vehicles cached using `LinkedList`.
+10. **Exit**: Gracefully terminates the application.
 
-```
-======= Database Connectivity Submenu (Phase 3 - Milestones 1 & 2) =======
-1. Test MySQL Connection (Ping & Diagnostics)
-2. Display Database Connection Status & Configuration
-3. Execute Simple Database Verification Query
-4. Return to Main Menu
-==========================================================================
-```
+---
 
+## Multithreading Demonstrations (`MultithreadingDemo.java`)
+
+All 8 multithreading and concurrency concepts are consolidated into `com.rentiq.ui.MultithreadingDemo`:
+1. **Thread Creation**: Extending `Thread` subclass vs implementing `Runnable`, demonstrating `start()` vs direct `run()`.
+2. **Thread Lifecycle**: `NEW`, `RUNNABLE`, `TIMED_WAITING`, and `TERMINATED` states.
+3. **Thread Priority**: `MIN_PRIORITY (1)`, `NORM_PRIORITY (5)`, `MAX_PRIORITY (10)`.
+4. **Thread Synchronization**: Shared counter guarded with `synchronized` method.
+5. **Race Condition**: Unsafe non-synchronized counter demonstrating lost updates when `count++` is interrupted.
+6. **Atomicity and Visibility**: Lock-free thread safety via `AtomicInteger` and cross-thread visibility via `volatile boolean`.
+7. **Thread Coordination (`wait()` & `notify()`)**: Producer-consumer coordination on a shared monitor lock.
+8. **Producer-Consumer Problem**: Bounded buffer with capacity 2 using `wait()` and `notifyAll()`.
+
+Run all multithreading and collections demos automatically via:
+`ash
+.\mvnw.cmd exec:java "-Dexec.args=--demo"
+`
 ---
 
 ## How to Compile, Test, and Run
@@ -429,6 +433,16 @@ mvn clean compile
 ### 2. Run Automated Tests
 ```cmd
 .\mvnw.cmd test
+```
+
+### 3. Launch the Interactive Application
+```cmd
+.\mvnw.cmd exec:java
+```
+
+### 4. Run the Automated Demonstration Suite
+```cmd
+.\mvnw.cmd exec:java "-Dexec.args=--demo"
 ```
 
 ### 3. Execute the Application

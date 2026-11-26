@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS users (
     phone VARCHAR(20) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER',
     driving_license_number VARCHAR(50) NULL,
-    membership_level VARCHAR(30) NULL DEFAULT 'Standard',
     department VARCHAR(100) NULL,
     admin_role VARCHAR(100) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -32,8 +31,7 @@ CREATE TABLE IF NOT EXISTS users (
     
     CONSTRAINT pk_users PRIMARY KEY (user_id),
     CONSTRAINT uq_users_email UNIQUE (email),
-    CONSTRAINT chk_user_role CHECK (role IN ('CUSTOMER', 'ADMIN')),
-    CONSTRAINT chk_membership_level CHECK (membership_level IS NULL OR membership_level IN ('Standard', 'Gold VIP', 'Platinum VIP'))
+    CONSTRAINT chk_user_role CHECK (role IN ('CUSTOMER', 'ADMIN'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_users_role ON users (role);

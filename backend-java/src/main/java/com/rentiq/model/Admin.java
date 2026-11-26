@@ -1,20 +1,13 @@
 package com.rentiq.model;
 
-/**
- * Represents an Administrator in the RentIQ system.
- * Extends User to demonstrate inheritance, constructor chaining using super,
- * method overriding, and runtime polymorphism.
- */
 public class Admin extends User {
     private String department;
     private String adminRole;
 
-    // Default constructor
     public Admin() {
         super();
     }
 
-    // Parameterized constructor
     public Admin(String userId, String name, String email, String password, String phoneNumber,
                  String department, String adminRole) {
         super(userId, name, email, password, phoneNumber);
@@ -22,7 +15,6 @@ public class Admin extends User {
         this.adminRole = adminRole;
     }
 
-    // Overloaded constructor without password
     public Admin(String userId, String name, String email, String phoneNumber,
                  String department, String adminRole) {
         super(userId, name, email, phoneNumber);

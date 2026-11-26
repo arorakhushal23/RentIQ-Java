@@ -27,7 +27,6 @@ erDiagram
         VARCHAR(20) phone
         VARCHAR(20) role "CUSTOMER | ADMIN"
         VARCHAR(50) driving_license_number "NULL for Admin"
-        VARCHAR(30) membership_level "Standard | Gold VIP | Platinum VIP"
         VARCHAR(100) department "NULL for Customer"
         VARCHAR(100) admin_role "NULL for Customer"
         TIMESTAMP created_at
